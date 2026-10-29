@@ -132,21 +132,36 @@ const javaArgs = (dir, cls) => ["-Xmx64m", "-Xss512k", "-XX:MaxMetaspaceSize=48m
   "-Dfile.encoding=UTF-8", "-Dsun.stdout.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Djava.awt.headless=true", ...SANDBOX, "-cp", dir, cls];
 const JVM_NOISE = /^WARNING: (A command line option has enabled|The Security Manager is deprecated)/;
 
-function run(cmd, args, { cwd, input, timeout, limit }) {
+// `inputs` (array of lines) are typed one at a time, each after the program has gone quiet (it is waiting for input),
+// so we can record where in the output each line was typed and show a terminal-style transcript.
+// Grading still compares the full stdout; the transcript is only for display.
+const FIRST_OUTPUT_MS = 1500, QUIET_MS = 30;
+function run(cmd, args, { cwd, input, inputs, timeout, limit }) {
   if (limit && ULIMIT) { args = ["-c", 'ulimit -u 1024 2>/dev/null || ulimit -p 1024 2>/dev/null; exec "$0" "$@"', cmd, ...args]; cmd = "/bin/sh"; }
   return new Promise((resolve) => {
     const p = spawn(cmd, args, { cwd, env: childEnv, detached: true, stdio: ["pipe", "pipe", "pipe"] });
     let out = "", err = "", killed = false, done = false, flood = false;
+    const marks = []; let fed = 0, quiet = null;
     const kill = () => { killed = true; try { process.kill(-p.pid, "SIGKILL"); } catch (e) {} try { p.kill("SIGKILL"); } catch (e) {} };
     const timer = setTimeout(kill, timeout);
+    const feed = () => { quiet = null; if (done) return; if (inputs && fed < inputs.length) { marks.push(out.length); try { p.stdin.write(inputs[fed++] + "\n"); } catch (e) {} quiet = setTimeout(feed, QUIET_MS); } else { try { p.stdin.end(); } catch (e) {} } };
+    const arm = (ms) => { if (quiet) clearTimeout(quiet); quiet = setTimeout(feed, ms); };
     p.stdout.setEncoding("utf8"); p.stderr.setEncoding("utf8");
-    p.stdout.on("data", d => { if (out.length < MAX_OUT) out += d; else { flood = true; kill(); } });
+    p.stdout.on("data", d => { if (out.length < MAX_OUT) { out += d; if (inputs && fed < inputs.length) arm(QUIET_MS); } else { flood = true; kill(); } });
     p.stderr.on("data", d => { if (err.length < MAX_OUT) err += d; });
     p.stdin.on("error", () => {});
-    p.stdin.end(input || "");
-    const fin = (code) => { if (done) return; done = true; clearTimeout(timer); resolve({ out, err, code, timedOut: killed && !flood, flooded: flood }); };
+    if (inputs) arm(FIRST_OUTPUT_MS); else p.stdin.end(input || "");
+    const fin = (code) => { if (done) return; done = true; clearTimeout(timer); if (quiet) clearTimeout(quiet); resolve({ out, err, code, timedOut: killed && !flood, flooded: flood, parts: transcript(out, marks, inputs || []) }); };
     p.on("close", fin); p.on("error", () => fin(-1));
   });
+}
+// [{out, in}, ...]: output printed before each typed line, then the line; the last part has no `in`.
+function transcript(out, marks, inputs) {
+  const parts = []; let pos = 0;
+  marks.forEach((m, i) => { parts.push({ out: out.slice(pos, m), in: inputs[i] }); pos = m; });
+  for (let i = marks.length; i < inputs.length; i++) parts.push({ out: "", in: inputs[i], unread: true });   // typed but never read
+  parts.push({ out: out.slice(pos) });
+  return parts;
 }
 
 let active = 0; const waiting = [];
@@ -177,10 +192,10 @@ async function grade(prog, code) {
     let ti = 0;
     for (const t of prog.tests) {
       const name = "Test " + (++ti);
-      if (slow >= 2) { results.push({ name, pass: false, note: "Skipped — your program was too slow on earlier tests.", input: t.input, expected: t.expected, actual: "" }); continue; }
-      const r = await run("java", javaArgs(dir, prog.cls), { cwd: dir, input: t.input.join("\n") + "\n", timeout: RUN_MS, limit: true });
+      if (slow >= 2) { results.push({ name, pass: false, note: "Skipped — your program was too slow on earlier tests.", input: t.input, expected: t.expected, expectedParts: t.parts, actual: "", actualParts: [] }); continue; }
+      const r = await run("java", javaArgs(dir, prog.cls), { cwd: dir, inputs: t.input, timeout: RUN_MS, limit: true });
       const pass = !r.timedOut && r.code === 0 && norm(r.out) === norm(t.expected);
-      const res = { name, pass, input: t.input, expected: t.expected, actual: r.out };
+      const res = { name, pass, input: t.input, expected: t.expected, expectedParts: t.parts, actual: r.out, actualParts: r.parts };
       if (r.timedOut) slow++;
       const errLines = r.err.split("\n").filter(l => l.trim() && !JVM_NOISE.test(l));
       if (r.flooded) res.note = "Your program printed far too much output (infinite loop?)";
@@ -204,7 +219,7 @@ async function selfTest() {
     for (const [u, s] of [[true, true], [false, true], [true, false], [false, false]]) {
       ULIMIT = u; if (!s) SANDBOX = [];
       const t0 = Date.now();
-      const r = await run("java", javaArgs(dir, "T"), { cwd: dir, input: "Kostia 3 true 2.5\n", timeout: 30000, limit: true });
+      const r = await run("java", javaArgs(dir, "T"), { cwd: dir, inputs: ["Kostia", "3", "true", "2.5"], timeout: 30000, limit: true });
       if (r.code === 0 && norm(r.out) === want) {
         console.log(`SELF-TEST OK: one test run took ${Date.now() - t0} ms; security manager ${s ? "ON" : "OFF"}; process limit ${u ? "ON" : "OFF"}`);
         if (!s) console.error("WARNING: student code is NOT running under the Java security manager. Use a JDK 17-21 image.");
@@ -238,7 +253,7 @@ const server = http.createServer((req, res) => {
   const ip = clientIp(req);
   if (req.method === "OPTIONS") return send(res, 204, "");
   if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header, prompt: p.prompt || "",
-    samples: p.tests.map((t, i) => ({ name: "Test " + (i + 1), input: t.input, expected: t.expected })) })));
+    samples: p.tests.map((t, i) => ({ name: "Test " + (i + 1), input: t.input, expected: t.expected, parts: t.parts })) })));
   if (url.pathname === "/api/status") return send(res, 200, { state: S.state });
   if (url.pathname === "/api/board") return send(res, 200, board());
   if (url.pathname === "/api/admin" && req.method === "POST") {

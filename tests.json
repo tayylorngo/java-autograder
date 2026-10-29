@@ -13,7 +13,20 @@
      "Kostia",
      "52"
     ],
-    "expected": "Name: Pieces of candy: Kostia collected 52 pieces: Legendary haul!\n"
+    "expected": "Name: Pieces of candy: Kostia collected 52 pieces: Legendary haul!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Kostia"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "52"
+     },
+     {
+      "out": "Kostia collected 52 pieces: Legendary haul!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 2",
@@ -22,7 +35,20 @@
      "Amiyah",
      "30"
     ],
-    "expected": "Name: Pieces of candy: Amiyah collected 30 pieces: Solid haul.\n"
+    "expected": "Name: Pieces of candy: Amiyah collected 30 pieces: Solid haul.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Amiyah"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "30"
+     },
+     {
+      "out": "Amiyah collected 30 pieces: Solid haul.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 3",
@@ -31,7 +57,20 @@
      "Lior",
      "12"
     ],
-    "expected": "Name: Pieces of candy: Lior collected 12 pieces: Not bad.\n"
+    "expected": "Name: Pieces of candy: Lior collected 12 pieces: Not bad.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Lior"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "12"
+     },
+     {
+      "out": "Lior collected 12 pieces: Not bad.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 4",
@@ -40,7 +79,20 @@
      "Matthew",
      "4"
     ],
-    "expected": "Name: Pieces of candy: Matthew collected 4 pieces: The neighbors ghosted you.\n"
+    "expected": "Name: Pieces of candy: Matthew collected 4 pieces: The neighbors ghosted you.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Matthew"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "4"
+     },
+     {
+      "out": "Matthew collected 4 pieces: The neighbors ghosted you.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 1",
@@ -49,7 +101,20 @@
      "Sika",
      "50"
     ],
-    "expected": "Name: Pieces of candy: Sika collected 50 pieces: Legendary haul!\n"
+    "expected": "Name: Pieces of candy: Sika collected 50 pieces: Legendary haul!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Sika"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "50"
+     },
+     {
+      "out": "Sika collected 50 pieces: Legendary haul!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 2",
@@ -58,7 +123,20 @@
      "Conrad",
      "25"
     ],
-    "expected": "Name: Pieces of candy: Conrad collected 25 pieces: Solid haul.\n"
+    "expected": "Name: Pieces of candy: Conrad collected 25 pieces: Solid haul.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Conrad"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "25"
+     },
+     {
+      "out": "Conrad collected 25 pieces: Solid haul.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 3",
@@ -67,7 +145,20 @@
      "Angel",
      "10"
     ],
-    "expected": "Name: Pieces of candy: Angel collected 10 pieces: Not bad.\n"
+    "expected": "Name: Pieces of candy: Angel collected 10 pieces: Not bad.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Angel"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "10"
+     },
+     {
+      "out": "Angel collected 10 pieces: Not bad.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 4",
@@ -76,7 +167,20 @@
      "Travis",
      "9"
     ],
-    "expected": "Name: Pieces of candy: Travis collected 9 pieces: The neighbors ghosted you.\n"
+    "expected": "Name: Pieces of candy: Travis collected 9 pieces: The neighbors ghosted you.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Travis"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "9"
+     },
+     {
+      "out": "Travis collected 9 pieces: The neighbors ghosted you.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 5",
@@ -85,7 +189,20 @@
      "Nikolay",
      "0"
     ],
-    "expected": "Name: Pieces of candy: Nikolay collected 0 pieces: The neighbors ghosted you.\n"
+    "expected": "Name: Pieces of candy: Nikolay collected 0 pieces: The neighbors ghosted you.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Nikolay"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "0"
+     },
+     {
+      "out": "Nikolay collected 0 pieces: The neighbors ghosted you.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 6",
@@ -94,7 +211,20 @@
      "Austin",
      "100"
     ],
-    "expected": "Name: Pieces of candy: Austin collected 100 pieces: Legendary haul!\n"
+    "expected": "Name: Pieces of candy: Austin collected 100 pieces: Legendary haul!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Austin"
+     },
+     {
+      "out": "Pieces of candy: ",
+      "in": "100"
+     },
+     {
+      "out": "Austin collected 100 pieces: Legendary haul!\n"
+     }
+    ]
    }
   ]
  },
@@ -114,7 +244,28 @@
      "false",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Kostia, the door creaks open...\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Kostia, the door creaks open...\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Kostia"
+     },
+     {
+      "out": "Age: ",
+      "in": "14"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Kostia, the door creaks open...\n"
+     }
+    ]
    },
    {
     "name": "Sample run 2",
@@ -125,7 +276,28 @@
      "true",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Lior, the door creaks open...\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Lior, the door creaks open...\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Lior"
+     },
+     {
+      "out": "Age: ",
+      "in": "9"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Lior, the door creaks open...\n"
+     }
+    ]
    },
    {
     "name": "Sample run 3",
@@ -136,7 +308,28 @@
      "false",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Amiyah, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Amiyah, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Amiyah"
+     },
+     {
+      "out": "Age: ",
+      "in": "9"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Amiyah, the ghost blocks your way.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 4",
@@ -147,7 +340,28 @@
      "false",
      "true"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Matthew, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Matthew, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Matthew"
+     },
+     {
+      "out": "Age: ",
+      "in": "15"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Matthew, the ghost blocks your way.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 1",
@@ -158,7 +372,28 @@
      "false",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Sika, the door creaks open...\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Sika, the door creaks open...\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Sika"
+     },
+     {
+      "out": "Age: ",
+      "in": "12"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Sika, the door creaks open...\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 2",
@@ -169,7 +404,28 @@
      "false",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Travis, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Travis, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Travis"
+     },
+     {
+      "out": "Age: ",
+      "in": "11"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Travis, the ghost blocks your way.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 3",
@@ -180,7 +436,28 @@
      "true",
      "true"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Angel, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Angel, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Angel"
+     },
+     {
+      "out": "Age: ",
+      "in": "11"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Angel, the ghost blocks your way.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 4",
@@ -191,7 +468,28 @@
      "true",
      "true"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Hassan, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Hassan, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Hassan"
+     },
+     {
+      "out": "Age: ",
+      "in": "12"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Hassan, the ghost blocks your way.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 5",
@@ -202,7 +500,28 @@
      "true",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Nikolay, the door creaks open...\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Nikolay, the door creaks open...\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Nikolay"
+     },
+     {
+      "out": "Age: ",
+      "in": "30"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Nikolay, the door creaks open...\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 6",
@@ -213,7 +532,28 @@
      "false",
      "false"
     ],
-    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Conrad, the ghost blocks your way.\n"
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Conrad, the ghost blocks your way.\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Conrad"
+     },
+     {
+      "out": "Age: ",
+      "in": "5"
+     },
+     {
+      "out": "With an adult (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Scared (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Conrad, the ghost blocks your way.\n"
+     }
+    ]
    }
   ]
  },
@@ -231,7 +571,20 @@
      "60",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "60"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Prize pumpkin!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 2",
@@ -240,7 +593,20 @@
      "25.5",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "25.5"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Great for carving.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 3",
@@ -249,7 +615,20 @@
      "30",
      "true"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "30"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Verdict: Compost it.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 4",
@@ -258,7 +637,20 @@
      "6.5",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "6.5"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Too small to carve.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 1",
@@ -267,7 +659,20 @@
      "50",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "50"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Prize pumpkin!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 2",
@@ -276,7 +681,20 @@
      "10",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "10"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Great for carving.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 3",
@@ -285,7 +703,20 @@
      "9.9",
      "true"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "9.9"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Verdict: Too small to carve.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 4",
@@ -294,7 +725,20 @@
      "100",
      "true"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "100"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Verdict: Compost it.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 5",
@@ -303,7 +747,20 @@
      "49.9",
      "false"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "49.9"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Verdict: Great for carving.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 6",
@@ -312,7 +769,20 @@
      "10",
      "true"
     ],
-    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n",
+    "parts": [
+     {
+      "out": "Weight in pounds: ",
+      "in": "10"
+     },
+     {
+      "out": "Rotten (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Verdict: Compost it.\n"
+     }
+    ]
    }
   ]
  },
@@ -329,7 +799,16 @@
     "input": [
      "zombie"
     ],
-    "expected": "Enter a word: Length: 6\nzombie is CURSED!\n"
+    "expected": "Enter a word: Length: 6\nzombie is CURSED!\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "zombie"
+     },
+     {
+      "out": "Length: 6\nzombie is CURSED!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 2",
@@ -337,7 +816,16 @@
     "input": [
      "skeleton"
     ],
-    "expected": "Enter a word: Length: 8\nskeleton is CURSED!\n"
+    "expected": "Enter a word: Length: 8\nskeleton is CURSED!\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "skeleton"
+     },
+     {
+      "out": "Length: 8\nskeleton is CURSED!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 3",
@@ -345,7 +833,16 @@
     "input": [
      "pumpkins"
     ],
-    "expected": "Enter a word: Length: 8\npumpkins is safe.\n"
+    "expected": "Enter a word: Length: 8\npumpkins is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "pumpkins"
+     },
+     {
+      "out": "Length: 8\npumpkins is safe.\n"
+     }
+    ]
    },
    {
     "name": "Sample run 4",
@@ -353,7 +850,16 @@
     "input": [
      "ghost"
     ],
-    "expected": "Enter a word: Length: 5\nghost is safe.\n"
+    "expected": "Enter a word: Length: 5\nghost is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "ghost"
+     },
+     {
+      "out": "Length: 5\nghost is safe.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 1",
@@ -361,7 +867,16 @@
     "input": [
      "zzz"
     ],
-    "expected": "Enter a word: Length: 3\nzzz is CURSED!\n"
+    "expected": "Enter a word: Length: 3\nzzz is CURSED!\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "zzz"
+     },
+     {
+      "out": "Length: 3\nzzz is CURSED!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 2",
@@ -369,7 +884,16 @@
     "input": [
      "witchcraft"
     ],
-    "expected": "Enter a word: Length: 10\nwitchcraft is safe.\n"
+    "expected": "Enter a word: Length: 10\nwitchcraft is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "witchcraft"
+     },
+     {
+      "out": "Length: 10\nwitchcraft is safe.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 3",
@@ -377,7 +901,16 @@
     "input": [
      "banshee"
     ],
-    "expected": "Enter a word: Length: 7\nbanshee is safe.\n"
+    "expected": "Enter a word: Length: 7\nbanshee is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "banshee"
+     },
+     {
+      "out": "Length: 7\nbanshee is safe.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 4",
@@ -385,7 +918,16 @@
     "input": [
      "trickster"
     ],
-    "expected": "Enter a word: Length: 9\ntrickster is safe.\n"
+    "expected": "Enter a word: Length: 9\ntrickster is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "trickster"
+     },
+     {
+      "out": "Length: 9\ntrickster is safe.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 5",
@@ -393,7 +935,16 @@
     "input": [
      "z"
     ],
-    "expected": "Enter a word: Length: 1\nz is CURSED!\n"
+    "expected": "Enter a word: Length: 1\nz is CURSED!\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "z"
+     },
+     {
+      "out": "Length: 1\nz is CURSED!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 6",
@@ -401,7 +952,16 @@
     "input": [
      "hollow"
     ],
-    "expected": "Enter a word: Length: 6\nhollow is safe.\n"
+    "expected": "Enter a word: Length: 6\nhollow is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "hollow"
+     },
+     {
+      "out": "Length: 6\nhollow is safe.\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 7",
@@ -409,7 +969,16 @@
     "input": [
      "ooooooooo"
     ],
-    "expected": "Enter a word: Length: 9\nooooooooo is CURSED!\n"
+    "expected": "Enter a word: Length: 9\nooooooooo is CURSED!\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "ooooooooo"
+     },
+     {
+      "out": "Length: 9\nooooooooo is CURSED!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 8",
@@ -417,7 +986,16 @@
     "input": [
      "frankenstein"
     ],
-    "expected": "Enter a word: Length: 12\nfrankenstein is safe.\n"
+    "expected": "Enter a word: Length: 12\nfrankenstein is safe.\n",
+    "parts": [
+     {
+      "out": "Enter a word: ",
+      "in": "frankenstein"
+     },
+     {
+      "out": "Length: 12\nfrankenstein is safe.\n"
+     }
+    ]
    }
   ]
  },
@@ -437,7 +1015,28 @@
      "25",
      "true"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Kostia faces a zombie!\nYou swing and win!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Kostia faces a zombie!\nYou swing and win!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Kostia"
+     },
+     {
+      "out": "Speed: ",
+      "in": "10"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "25"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Kostia faces a zombie!\nYou swing and win!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 2",
@@ -448,7 +1047,28 @@
      "15",
      "true"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Lior faces a zombie!\nToo tired to swing. The zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Lior faces a zombie!\nToo tired to swing. The zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Lior"
+     },
+     {
+      "out": "Speed: ",
+      "in": "20"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "15"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Lior faces a zombie!\nToo tired to swing. The zombie got you!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 3",
@@ -459,7 +1079,28 @@
      "12",
      "false"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Matthew faces a zombie!\nYou outrun the zombie!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Matthew faces a zombie!\nYou outrun the zombie!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Matthew"
+     },
+     {
+      "out": "Speed: ",
+      "in": "18"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "12"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Matthew faces a zombie!\nYou outrun the zombie!\n"
+     }
+    ]
    },
    {
     "name": "Sample run 4",
@@ -470,7 +1111,28 @@
      "40",
      "false"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Amiyah faces a zombie!\nThe zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Amiyah faces a zombie!\nThe zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Amiyah"
+     },
+     {
+      "out": "Speed: ",
+      "in": "14"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "40"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Amiyah faces a zombie!\nThe zombie got you!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 1",
@@ -481,7 +1143,28 @@
      "10",
      "false"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Sika faces a zombie!\nYou outrun the zombie!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Sika faces a zombie!\nYou outrun the zombie!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Sika"
+     },
+     {
+      "out": "Speed: ",
+      "in": "15"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "10"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Sika faces a zombie!\nYou outrun the zombie!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 2",
@@ -492,7 +1175,28 @@
      "9",
      "false"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Travis faces a zombie!\nThe zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Travis faces a zombie!\nThe zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Travis"
+     },
+     {
+      "out": "Speed: ",
+      "in": "15"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "9"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Travis faces a zombie!\nThe zombie got you!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 3",
@@ -503,7 +1207,28 @@
      "19",
      "true"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Angel faces a zombie!\nToo tired to swing. The zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Angel faces a zombie!\nToo tired to swing. The zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Angel"
+     },
+     {
+      "out": "Speed: ",
+      "in": "5"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "19"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Angel faces a zombie!\nToo tired to swing. The zombie got you!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 4",
@@ -514,7 +1239,28 @@
      "50",
      "false"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Conrad faces a zombie!\nThe zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Conrad faces a zombie!\nThe zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Conrad"
+     },
+     {
+      "out": "Speed: ",
+      "in": "14"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "50"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "false"
+     },
+     {
+      "out": "Conrad faces a zombie!\nThe zombie got you!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 5",
@@ -525,7 +1271,28 @@
      "20",
      "true"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Hassan faces a zombie!\nYou swing and win!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Hassan faces a zombie!\nYou swing and win!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Hassan"
+     },
+     {
+      "out": "Speed: ",
+      "in": "0"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "20"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Hassan faces a zombie!\nYou swing and win!\n"
+     }
+    ]
    },
    {
     "name": "Hidden test 6",
@@ -536,7 +1303,28 @@
      "10",
      "true"
     ],
-    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Nikolay faces a zombie!\nToo tired to swing. The zombie got you!\n"
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Nikolay faces a zombie!\nToo tired to swing. The zombie got you!\n",
+    "parts": [
+     {
+      "out": "Name: ",
+      "in": "Nikolay"
+     },
+     {
+      "out": "Speed: ",
+      "in": "15"
+     },
+     {
+      "out": "Stamina: ",
+      "in": "10"
+     },
+     {
+      "out": "Has a weapon (true/false): ",
+      "in": "true"
+     },
+     {
+      "out": "Nikolay faces a zombie!\nToo tired to swing. The zombie got you!\n"
+     }
+    ]
    }
   ]
  }

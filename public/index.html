@@ -32,6 +32,9 @@ ul{list-style:none;margin:0;padding:0}li{padding:9px 0;border-top:1px solid var(
 .who .tn{color:var(--orange)}
 .spin.sm{width:28px;height:28px;border-width:4px;display:inline-block;vertical-align:middle;margin-right:10px}
 .tab.busy .st{color:var(--orange)}
+pre.term .typed{color:var(--orange);font-weight:700;background:rgba(255,138,31,.12);border-radius:4px;padding:0 3px}
+pre.term .unread{color:var(--mute);text-decoration:line-through}
+.runs{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.runs{grid-template-columns:1fr}}
 </style></head>
 <body><main>
 <div class="top"><h1>Halloween <span>Pair Challenge</span></h1><div><span id="chip" class="chip waiting">...</span> <span id="timer" class="timer"></span></div></div>
@@ -111,7 +114,7 @@ function panel(force){const p=programs.find(x=>x.id===cur);if(!p)return;const c=
   const solved=c&&c.solvedAt!==null,open=M.state==="open";
   if(last&&u.resultAt!==last.at&&!u.fetching){u.fetching=true;fetch(API+"/api/result?id="+encodeURIComponent(pid)+"&program="+p.id).then(r=>r.ok?r.json():null).then(d=>{u.fetching=false;if(d){u.result=show(d);u.resultAt=d.at;panel(true)}}).catch(()=>{u.fetching=false})}
   let h=`<div class="card"><h2>${esc(p.title)}</h2><pre>${esc(p.prompt||"")}</pre><div class="need">File name: <code>${p.cls}.java</code> &middot; required header: <code>${esc(p.header)}</code></div>
-    <details><summary>All test cases (${p.samples.length}) &mdash; input and expected output</summary>${p.samples.map(s=>`<div class="lbl">Input typed</div><pre>${esc(s.input.join("\n"))}</pre><div class="lbl">Expected output</div><pre>${esc(s.expected)}</pre>`).join("")}</details></div>`;
+    <details><summary>All test cases (${p.samples.length}) &mdash; what each run should look like (typed input highlighted)</summary>${p.samples.map(s=>`<div class="lbl">${esc(s.name)}</div>${term(s.parts,s.expected)}`).join("")}</details></div>`;
   if(solved)h+=`<div class="card"><div class="score">&#10003; Solved<small> &middot; ${c.points} points${c.attempts>1?" &middot; "+c.attempts+" attempts":""}</small></div><span class="pump">Nice work! Pick another program.</span></div>`;
   else if(g)h+=`<div class="card" style="border-color:var(--orange)"><div class="spin sm"></div><b>${esc(g.by)} is running the tests on this program&hellip;</b><div class="pump" style="margin-top:6px">You can work on another program meanwhile. The result will show up here for both of you.</div></div>`;
   else h+=`<div class="card"><div class="drop" id="drop" tabindex="0" role="button"><div id="dropmsg">${u.fname?`<b>${esc(u.fname)}</b> ready &mdash; click to choose a different file`:`<b>Click to choose</b> or drag your <code>${p.cls}.java</code> here`}</div></div><input id="file" type="file" accept=".java" hidden><button class="run" id="go" ${open&&u.code?"":"disabled"}>${open?"Run tests":"Submissions are closed"}</button>${c?`<p class="pump" style="margin:10px 0 0">Best so far: ${c.best}/${c.total} tests &middot; ${c.attempts} attempt${c.attempts===1?"":"s"} &middot; <span class="pts">${c.points} pts</span></p>`:""}</div>`;
@@ -130,12 +133,13 @@ async function submit(p,u){if(busy||!u.code)return;busy=true;$("go").disabled=tr
     else{u.result=show(r.d);u.resultAt=r.d.at;await poll()}
   }catch(e){u.result='<div class="card err">Could not reach the grader. Try again.</div>'}
   busy=false;$("busy").hidden=true;panel(true);const o=$("out");if(o)o.scrollIntoView({behavior:"smooth",block:"nearest"})}
+const term=(parts,raw)=>{if(!parts||!parts.length)return `<pre class="term">${esc(raw||"")||"(nothing)"}</pre>`;let h="";for(const p of parts){h+=esc(p.out);if("in"in p)h+=`<span class="${p.unread?"unread":"typed"}">${esc(p.in)}</span>${p.unread?' <span class="unread" style="text-decoration:none">(never read)</span>':""}\n`}return `<pre class="term">${h||"(nothing)"}</pre>`};
 const checks=c=>(c||[]).map(x=>`<li class="${x.ok?"ok":x.soft?"warn":"bad"}">${x.ok?"&#10003;":x.soft?"&#9888;":"&#10007;"} ${esc(x.msg)}</li>`).join("");
 function show(d){let h=d.by?`<p class="pump" style="margin:0 0 6px">Upload by <b>${esc(d.by)}</b> at ${new Date(d.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</p>`:"";
   if(d.error)return h+`<div class="card err"><b class="bad">${esc(d.error)}</b>${d.detail?`<pre>${esc(d.detail)}</pre>`:""}<ul>${checks(d.checks)}</ul>${d.score?"":'<p class="pump" style="margin:8px 0 0">This upload did not count as an attempt.</p>'}</div>`;
   const pct=Math.round(100*d.passed/d.total),sc=d.score;
   h+=`<div class="card"><div class="score">${d.passed}<small> / ${d.total} tests passed</small>${sc?` <small>&middot; <span class="pts">${sc.points} pts</span> for this program (attempt ${sc.attempts})</small>`:""}</div><div class="bar"><i style="width:${pct}%"></i></div>${d.passed===d.total?'<b class="ok">All tests pass &mdash; nice work! Pick another program.</b>':'<span class="pump">Fix the failing tests and upload again. Each extra compiled attempt costs a few points, so test with the sample runs first.</span>'}<ul style="margin-top:10px">${checks(d.checks)}</ul></div><div class="card"><ul style="margin:-9px 0">`;
   for(const t of d.results){const mark=t.pass?'<span class="ok">&#10003;</span>':'<span class="bad">&#10007;</span>';
-    h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary><div class="lbl">Input typed</div><pre>${esc(t.input.join("\n"))}</pre><div class="lbl">Expected output</div><pre>${esc(t.expected)}</pre><div class="lbl">Your output</div><pre>${esc(t.actual)||"(nothing)"}</pre></details></li>`}
+    h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary><div class="runs"><div><div class="lbl">Expected run</div>${term(t.expectedParts,t.expected)}</div><div><div class="lbl">Your run</div>${term(t.actualParts,t.actual)}</div></div></details></li>`}
   return h+"</ul></div>"}
 </script></body></html>

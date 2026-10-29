@@ -24,7 +24,7 @@ Per program, per team:
 ## What's in the box
 - `server.js` — the grader (plain Node, no npm install). Compiles with `javac`, runs each test with a 3-second limit and 64 MB memory.
 - `grader.policy` — Java security-manager policy for student programs (grants nothing: no files, network, exec, env).
-- `tests.json` — the test cases (10–12 per program). Students see every test's input and expected output (no hidden tests, by the teacher's choice).
+- `tests.json` — the test cases (10–12 per program) with the raw expected stdout (what grading compares) and a terminal-style transcript for display. Students see every test (no hidden tests, by the teacher's choice).
 - `public/` — the student page (`index.html`: name → lobby → challenge), projector board (`board.html`), teacher controls (`teacher.html`), `config.js`.
 - `Dockerfile`, `render.yaml` — Node 22 + JDK 17, runs as a non-root user; Render Blueprint for one-click setup.
 - `smoke_test.js` — `node smoke_test.js https://YOUR-APP.onrender.com YOUR_KEY` joins as a test student, starts a round, uploads the 5 reference solutions, checks the board, then resets everything.
@@ -70,6 +70,6 @@ Student code is untrusted. Four layers:
 Also: 300 submissions per IP per 5 minutes; 20 wrong teacher passwords per IP per 10 minutes.
 
 - Free hosts wipe the disk on restart, so `submissions.jsonl` may reset and the first request after idle can take ~30–60 s while it wakes up. Open the page a minute before class.
-- The check compares output exactly (trailing spaces and the final newline are ignored), so prompts must match the handout character for character. Those prompts are the same as the sample runs.
+- The check compares stdout exactly (trailing spaces and the final newline are ignored), so prompts must match character for character. For display, the grader types each input line only once the program has paused for it and records where it was typed, so students see a terminal-style transcript (`Name: Kostia`) for the expected run and their own run side by side.
 - Windows `\r\n` files, a UTF-8 byte-order mark, and an IDE `package` line are all accepted (the package line is ignored and noted).
 - The page asks only for each student's name; no accounts, no passwords. The random id stored in the browser only maps a tab to a lobby entry. Check your school's data-privacy rules before students submit work to a site you host.
