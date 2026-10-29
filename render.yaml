@@ -1,0 +1,13 @@
+# Render Blueprint: in the Render dashboard choose New -> Blueprint, pick this repo, and it creates the service.
+services:
+  - type: web
+    name: java-autograder
+    runtime: docker
+    plan: starter          # 0.5 CPU / 512 MB. "free" works but is ~5x slower per submission and sleeps after 15 min idle.
+    region: ohio           # pick the region closest to your school
+    healthCheckPath: /api/status
+    envVars:
+      - key: TEACHER_KEY
+        sync: false        # Render prompts you for the value; it is never stored in the repo
+      - key: ALLOWED_ORIGIN
+        value: "*"

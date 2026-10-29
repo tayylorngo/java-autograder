@@ -1,0 +1,538 @@
+[
+ {
+  "id": "candycheck",
+  "title": "Program 1 — CandyCheck",
+  "cls": "CandyCheck",
+  "header": "public static String rating(int pieces)",
+  "tests": [
+   {
+    "name": "Sample run 1",
+    "hidden": false,
+    "input": [
+     "Kostia",
+     "52"
+    ],
+    "expected": "Name: Pieces of candy: Kostia collected 52 pieces: Legendary haul!\n"
+   },
+   {
+    "name": "Sample run 2",
+    "hidden": false,
+    "input": [
+     "Amiyah",
+     "30"
+    ],
+    "expected": "Name: Pieces of candy: Amiyah collected 30 pieces: Solid haul.\n"
+   },
+   {
+    "name": "Sample run 3",
+    "hidden": false,
+    "input": [
+     "Lior",
+     "12"
+    ],
+    "expected": "Name: Pieces of candy: Lior collected 12 pieces: Not bad.\n"
+   },
+   {
+    "name": "Sample run 4",
+    "hidden": false,
+    "input": [
+     "Matthew",
+     "4"
+    ],
+    "expected": "Name: Pieces of candy: Matthew collected 4 pieces: The neighbors ghosted you.\n"
+   },
+   {
+    "name": "Hidden test 1",
+    "hidden": true,
+    "input": [
+     "Sika",
+     "50"
+    ],
+    "expected": "Name: Pieces of candy: Sika collected 50 pieces: Legendary haul!\n"
+   },
+   {
+    "name": "Hidden test 2",
+    "hidden": true,
+    "input": [
+     "Conrad",
+     "25"
+    ],
+    "expected": "Name: Pieces of candy: Conrad collected 25 pieces: Solid haul.\n"
+   },
+   {
+    "name": "Hidden test 3",
+    "hidden": true,
+    "input": [
+     "Angel",
+     "10"
+    ],
+    "expected": "Name: Pieces of candy: Angel collected 10 pieces: Not bad.\n"
+   },
+   {
+    "name": "Hidden test 4",
+    "hidden": true,
+    "input": [
+     "Travis",
+     "9"
+    ],
+    "expected": "Name: Pieces of candy: Travis collected 9 pieces: The neighbors ghosted you.\n"
+   },
+   {
+    "name": "Hidden test 5",
+    "hidden": true,
+    "input": [
+     "Nikolay",
+     "0"
+    ],
+    "expected": "Name: Pieces of candy: Nikolay collected 0 pieces: The neighbors ghosted you.\n"
+   },
+   {
+    "name": "Hidden test 6",
+    "hidden": true,
+    "input": [
+     "Austin",
+     "100"
+    ],
+    "expected": "Name: Pieces of candy: Austin collected 100 pieces: Legendary haul!\n"
+   }
+  ]
+ },
+ {
+  "id": "hauntedDoor",
+  "title": "Program 2 — HauntedDoor",
+  "cls": "HauntedDoor",
+  "header": "public static boolean canEnter(int age, boolean withAdult, boolean scared)",
+  "tests": [
+   {
+    "name": "Sample run 1",
+    "hidden": false,
+    "input": [
+     "Kostia",
+     "14",
+     "false",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Kostia, the door creaks open...\n"
+   },
+   {
+    "name": "Sample run 2",
+    "hidden": false,
+    "input": [
+     "Lior",
+     "9",
+     "true",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Lior, the door creaks open...\n"
+   },
+   {
+    "name": "Sample run 3",
+    "hidden": false,
+    "input": [
+     "Amiyah",
+     "9",
+     "false",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Amiyah, the ghost blocks your way.\n"
+   },
+   {
+    "name": "Sample run 4",
+    "hidden": false,
+    "input": [
+     "Matthew",
+     "15",
+     "false",
+     "true"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Matthew, the ghost blocks your way.\n"
+   },
+   {
+    "name": "Hidden test 1",
+    "hidden": true,
+    "input": [
+     "Sika",
+     "12",
+     "false",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Sika, the door creaks open...\n"
+   },
+   {
+    "name": "Hidden test 2",
+    "hidden": true,
+    "input": [
+     "Travis",
+     "11",
+     "false",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Travis, the ghost blocks your way.\n"
+   },
+   {
+    "name": "Hidden test 3",
+    "hidden": true,
+    "input": [
+     "Angel",
+     "11",
+     "true",
+     "true"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Angel, the ghost blocks your way.\n"
+   },
+   {
+    "name": "Hidden test 4",
+    "hidden": true,
+    "input": [
+     "Hassan",
+     "12",
+     "true",
+     "true"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Hassan, the ghost blocks your way.\n"
+   },
+   {
+    "name": "Hidden test 5",
+    "hidden": true,
+    "input": [
+     "Nikolay",
+     "30",
+     "true",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Nikolay, the door creaks open...\n"
+   },
+   {
+    "name": "Hidden test 6",
+    "hidden": true,
+    "input": [
+     "Conrad",
+     "5",
+     "false",
+     "false"
+    ],
+    "expected": "Name: Age: With an adult (true/false): Scared (true/false): Conrad, the ghost blocks your way.\n"
+   }
+  ]
+ },
+ {
+  "id": "pumpkin",
+  "title": "Program 3 — Pumpkin",
+  "cls": "Pumpkin",
+  "header": "public static String verdict(double lbs, boolean rotten)",
+  "tests": [
+   {
+    "name": "Sample run 1",
+    "hidden": false,
+    "input": [
+     "60",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n"
+   },
+   {
+    "name": "Sample run 2",
+    "hidden": false,
+    "input": [
+     "25.5",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+   },
+   {
+    "name": "Sample run 3",
+    "hidden": false,
+    "input": [
+     "30",
+     "true"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+   },
+   {
+    "name": "Sample run 4",
+    "hidden": false,
+    "input": [
+     "6.5",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n"
+   },
+   {
+    "name": "Hidden test 1",
+    "hidden": true,
+    "input": [
+     "50",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Prize pumpkin!\n"
+   },
+   {
+    "name": "Hidden test 2",
+    "hidden": true,
+    "input": [
+     "10",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+   },
+   {
+    "name": "Hidden test 3",
+    "hidden": true,
+    "input": [
+     "9.9",
+     "true"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Too small to carve.\n"
+   },
+   {
+    "name": "Hidden test 4",
+    "hidden": true,
+    "input": [
+     "100",
+     "true"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+   },
+   {
+    "name": "Hidden test 5",
+    "hidden": true,
+    "input": [
+     "49.9",
+     "false"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Great for carving.\n"
+   },
+   {
+    "name": "Hidden test 6",
+    "hidden": true,
+    "input": [
+     "10",
+     "true"
+    ],
+    "expected": "Weight in pounds: Rotten (true/false): Verdict: Compost it.\n"
+   }
+  ]
+ },
+ {
+  "id": "cursedWord",
+  "title": "Program 4 — CursedWord",
+  "cls": "CursedWord",
+  "header": "public static boolean isCursed(String word)",
+  "tests": [
+   {
+    "name": "Sample run 1",
+    "hidden": false,
+    "input": [
+     "zombie"
+    ],
+    "expected": "Enter a word: Length: 6\nzombie is CURSED!\n"
+   },
+   {
+    "name": "Sample run 2",
+    "hidden": false,
+    "input": [
+     "skeleton"
+    ],
+    "expected": "Enter a word: Length: 8\nskeleton is CURSED!\n"
+   },
+   {
+    "name": "Sample run 3",
+    "hidden": false,
+    "input": [
+     "pumpkins"
+    ],
+    "expected": "Enter a word: Length: 8\npumpkins is safe.\n"
+   },
+   {
+    "name": "Sample run 4",
+    "hidden": false,
+    "input": [
+     "ghost"
+    ],
+    "expected": "Enter a word: Length: 5\nghost is safe.\n"
+   },
+   {
+    "name": "Hidden test 1",
+    "hidden": true,
+    "input": [
+     "zzz"
+    ],
+    "expected": "Enter a word: Length: 3\nzzz is CURSED!\n"
+   },
+   {
+    "name": "Hidden test 2",
+    "hidden": true,
+    "input": [
+     "witchcraft"
+    ],
+    "expected": "Enter a word: Length: 10\nwitchcraft is safe.\n"
+   },
+   {
+    "name": "Hidden test 3",
+    "hidden": true,
+    "input": [
+     "banshee"
+    ],
+    "expected": "Enter a word: Length: 7\nbanshee is safe.\n"
+   },
+   {
+    "name": "Hidden test 4",
+    "hidden": true,
+    "input": [
+     "trickster"
+    ],
+    "expected": "Enter a word: Length: 9\ntrickster is safe.\n"
+   },
+   {
+    "name": "Hidden test 5",
+    "hidden": true,
+    "input": [
+     "z"
+    ],
+    "expected": "Enter a word: Length: 1\nz is CURSED!\n"
+   },
+   {
+    "name": "Hidden test 6",
+    "hidden": true,
+    "input": [
+     "hollow"
+    ],
+    "expected": "Enter a word: Length: 6\nhollow is safe.\n"
+   },
+   {
+    "name": "Hidden test 7",
+    "hidden": true,
+    "input": [
+     "ooooooooo"
+    ],
+    "expected": "Enter a word: Length: 9\nooooooooo is CURSED!\n"
+   },
+   {
+    "name": "Hidden test 8",
+    "hidden": true,
+    "input": [
+     "frankenstein"
+    ],
+    "expected": "Enter a word: Length: 12\nfrankenstein is safe.\n"
+   }
+  ]
+ },
+ {
+  "id": "zombieEscape",
+  "title": "Program 5 — ZombieEscape",
+  "cls": "ZombieEscape",
+  "header": "public static String outcome(int speed, int stamina, boolean weapon)",
+  "tests": [
+   {
+    "name": "Sample run 1",
+    "hidden": false,
+    "input": [
+     "Kostia",
+     "10",
+     "25",
+     "true"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Kostia faces a zombie!\nYou swing and win!\n"
+   },
+   {
+    "name": "Sample run 2",
+    "hidden": false,
+    "input": [
+     "Lior",
+     "20",
+     "15",
+     "true"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Lior faces a zombie!\nToo tired to swing. The zombie got you!\n"
+   },
+   {
+    "name": "Sample run 3",
+    "hidden": false,
+    "input": [
+     "Matthew",
+     "18",
+     "12",
+     "false"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Matthew faces a zombie!\nYou outrun the zombie!\n"
+   },
+   {
+    "name": "Sample run 4",
+    "hidden": false,
+    "input": [
+     "Amiyah",
+     "14",
+     "40",
+     "false"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Amiyah faces a zombie!\nThe zombie got you!\n"
+   },
+   {
+    "name": "Hidden test 1",
+    "hidden": true,
+    "input": [
+     "Sika",
+     "15",
+     "10",
+     "false"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Sika faces a zombie!\nYou outrun the zombie!\n"
+   },
+   {
+    "name": "Hidden test 2",
+    "hidden": true,
+    "input": [
+     "Travis",
+     "15",
+     "9",
+     "false"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Travis faces a zombie!\nThe zombie got you!\n"
+   },
+   {
+    "name": "Hidden test 3",
+    "hidden": true,
+    "input": [
+     "Angel",
+     "5",
+     "19",
+     "true"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Angel faces a zombie!\nToo tired to swing. The zombie got you!\n"
+   },
+   {
+    "name": "Hidden test 4",
+    "hidden": true,
+    "input": [
+     "Conrad",
+     "14",
+     "50",
+     "false"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Conrad faces a zombie!\nThe zombie got you!\n"
+   },
+   {
+    "name": "Hidden test 5",
+    "hidden": true,
+    "input": [
+     "Hassan",
+     "0",
+     "20",
+     "true"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Hassan faces a zombie!\nYou swing and win!\n"
+   },
+   {
+    "name": "Hidden test 6",
+    "hidden": true,
+    "input": [
+     "Nikolay",
+     "15",
+     "10",
+     "true"
+    ],
+    "expected": "Name: Speed: Stamina: Has a weapon (true/false): Nikolay faces a zombie!\nToo tired to swing. The zombie got you!\n"
+   }
+  ]
+ }
+]

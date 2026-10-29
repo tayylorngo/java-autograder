@@ -1,0 +1,4 @@
+// Java security-manager policy for student programs. Nothing is granted:
+// no file or network access, no exec, no environment or system properties, no private reflection.
+grant {
+};

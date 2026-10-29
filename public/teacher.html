@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teacher Controls</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<div class="top"><h1>Teacher <span>Controls</span></h1><div><span id="chip" class="chip waiting">...</span> <span id="timer" class="timer"></span></div></div>
+<div class="card">
+  <div class="row" style="margin-bottom:14px"><input id="key" type="password" placeholder="Teacher password" autocomplete="off"><span id="msg" class="none"></span></div>
+  <div class="row">
+    <button class="go" id="start">Start</button><button class="stop" id="stop">Stop</button><button class="ghost" id="reset">Reset leaderboard</button>
+  </div>
+  <p class="none" style="margin:14px 0 0">Students can upload only while the chip says <b>LIVE</b>. <b>Stop</b> pauses uploads (Start resumes the same timer). <b>Reset</b> clears all scores and goes back to waiting.
+  &nbsp;<a href="board.html" target="_blank">Projector leaderboard</a> &middot; <a id="csv" href="#" target="_blank">Download CSV</a></p>
+</div>
+<div class="card" id="board"></div>
+</main>
+<script src="config.js"></script><script src="board.js"></script>
+<script>
+const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(id);
+try{$("key").value=sessionStorage.getItem("tk")||""}catch(e){}
+async function act(action){
+  const key=$("key").value;try{sessionStorage.setItem("tk",key)}catch(e){}
+  const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,action})});
+  const d=await r.json();$("msg").textContent=r.ok?"":(d.error||"Error");$("msg").className=r.ok?"none":"bad";
+  $("csv").href=API+"/api/results?key="+encodeURIComponent(key);
+  if(r.ok)window.refreshBoard();
+}
+$("start").onclick=()=>act("start");$("stop").onclick=()=>act("stop");
+$("reset").onclick=()=>{if(confirm("Clear all scores and go back to waiting?"))act("reset")};
+$("key").addEventListener("change",()=>act("check"));
+if($("key").value)act("check");
+</script></body></html>

@@ -1,0 +1,5 @@
+state.json
+submissions.jsonl
+node_modules
+.claude
+.DS_Store
