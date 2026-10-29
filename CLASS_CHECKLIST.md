@@ -21,7 +21,8 @@
 - [ ] Everyone opens the URL and types **their own name** (first name + last initial). Each person lands in the lobby as a solo team.
 - [ ] Pairs: one partner clicks **Join** on the other's card. Teams are 2 max. Anyone can stay solo.
 - [ ] Each student presses **Ready**. Ready locks them in (nobody can join or leave). The projector shows "x of y teams ready".
-- [ ] Explain: after Start you get 5 tabs, one per program, each with the prompt, the exact class name and header, sample runs, and its own upload. Code in your editor, save as `ClassName.java`, upload. Unlimited uploads, but every compiled upload after the first on a program costs 5 points (max 30), so test against the sample runs first. Solving fast earns a bonus.
+- [ ] Explain: after Start you get 5 tabs, one per program, each with the prompt, the exact class name and header, all test cases, and its own upload. Code in your editor, save as `ClassName.java`, upload. Unlimited uploads, but every compiled upload after the first on a program costs 5 points (max 30), so test against the listed cases first. Solving fast earns a bonus. Partners can split programs; while one of you is uploading program 2, the other can't submit program 2 but can work on anything else.
+- [ ] Wrong teams or a stray name? **Manage teams** on the teacher page moves or removes anyone, before or after Start.
 - [ ] Rule reminder: only `import java.util.Scanner;` — anything else (files, threads, `System.exit`) is rejected with a message and does not count as an attempt.
 
 ## Minute 5: press Start
@@ -33,6 +34,7 @@
 - Common student messages and what they mean:
   - "The class must be declared as: public class CandyCheck" → wrong class name or missing `public`.
   - "Required method header not found exactly as given" → they changed the method signature; the tests still run.
+  - "NAME is running tests on this program right now" → their partner uploaded the same program seconds ago; wait for that result.
   - "Compile error" → javac output is shown; fix and resubmit.
   - "Took too long" → infinite loop, or reading more input than the prompt gives.
   - "Program crashed: NoSuchElementException" → an extra `in.next…()` call.

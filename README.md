@@ -1,13 +1,14 @@
 # Java Autograder — Halloween Pair Challenge
 
-Students upload a `.java` file, pick the program, and see which tests pass. Sample runs show input / expected / their output;
-hidden tests show pass or fail only. Every submission is logged.
+Students enter a lobby, form teams of two, and after Start upload a `.java` file per program. Every test shows input / expected / their output. Every submission is logged.
 
 ## Running the activity (lobby → Start → leaderboard)
 - Students open the main page and type **their own name** (one per person). They land in the **lobby** as a solo team.
 - In the lobby a student clicks **Join** on someone who is alone to form a team of 2 (their empty team disappears), or **Leave team** to go solo again. **Ready** locks them in; nobody can join a Ready student and a Ready student can't move. The lobby shows "x of y teams ready".
 - Open `/teacher.html` on your computer and type your `TEACHER_KEY`. The Start button shows how many teams are ready; press **Start** when they all are (it asks to confirm if some aren't). Start locks the teams and switches every student screen to the challenge.
-- The **challenge screen** has a tab per program with the prompt, the required class name and method header, the sample runs, and its own upload box. Students code in their offline editor, upload the `.java` file, and see a ✓ or ✗ per test (hidden tests show pass/fail only) plus the points for that program. A solved program locks; the other four stay open.
+- The **challenge screen** has a tab per program with the prompt, the required class name and method header, every test case (input and expected output), and its own upload box. Students code in their offline editor, upload the `.java` file, and see a ✓ or ✗ per test with input, expected and actual output, plus the points for that program. A solved program locks; the other four stay open.
+- Teams are numbered **Team 1, Team 2, …** in order of arrival (numbers close up while the lobby is open and freeze at Start). Partners can split up: while one partner's upload for a program is being graded, that program shows a spinner on the other partner's screen and can't be re-submitted, but every other program stays open. Both partners see the same latest result for each program.
+- On the teacher page, **Manage teams** lets you move any student to another team or a new solo team, or remove them (they go back to the name screen).
 - Put `/board.html` on the projector. While waiting it shows the lobby (who is teamed up and ready); after Start it is the live leaderboard ranked by **points**, then programs solved, then total tests passed, then earliest finish.
 - **Stop** closes uploads (Start again resumes the same timer). **Back to lobby** keeps the teams but clears scores and the timer (use it if you pressed Start too early). **Reset everything** also empties the lobby for the next class.
 - A student who reloads the page keeps their identity (it is stored in that browser). A student who switches laptops just types the same name again; it is handed over once the old browser has been silent for 15 s. Two different students with the same name: the second one is asked to add a last initial.
@@ -23,7 +24,7 @@ Per program, per team:
 ## What's in the box
 - `server.js` — the grader (plain Node, no npm install). Compiles with `javac`, runs each test with a 3-second limit and 64 MB memory.
 - `grader.policy` — Java security-manager policy for student programs (grants nothing: no files, network, exec, env).
-- `tests.json` — the test cases (4 sample runs + 6–8 hidden tests per program). Stays on the server; students never download it.
+- `tests.json` — the test cases (10–12 per program). Students see every test's input and expected output (no hidden tests, by the teacher's choice).
 - `public/` — the student page (`index.html`: name → lobby → challenge), projector board (`board.html`), teacher controls (`teacher.html`), `config.js`.
 - `Dockerfile`, `render.yaml` — Node 22 + JDK 17, runs as a non-root user; Render Blueprint for one-click setup.
 - `smoke_test.js` — `node smoke_test.js https://YOUR-APP.onrender.com YOUR_KEY` joins as a test student, starts a round, uploads the 5 reference solutions, checks the board, then resets everything.

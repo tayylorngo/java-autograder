@@ -12,21 +12,31 @@
   &nbsp;<a href="board.html" target="_blank">Projector view</a> &middot; <a id="csv" href="#" target="_blank">Download CSV</a></p>
   <p class="none" id="scoring" style="margin:8px 0 0"></p>
 </div>
+<div class="card" id="manage"><h2>Manage teams</h2><p class="none" style="margin:0 0 6px">Move a student to another team or a new solo team, or remove them (they go back to the name screen).</p><div class="teams" id="mteams"><div class="empty">Type the password to see the lobby.</div></div></div>
 <div class="card" id="board"></div>
 </main>
 <script src="config.js"></script><script src="board.js"></script>
 <script>
 const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(id);
 try{$("key").value=sessionStorage.getItem("tk")||""}catch(e){}
-let last=null;
+let last=null,admin=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function manage(){if(!admin)return;const L=admin.lobby;if(!L.teams.length){$("mteams").innerHTML='<div class="empty">Nobody in the lobby yet.</div>';return}
+  const sig=JSON.stringify(L);if(manage.sig===sig)return;manage.sig=sig;
+  $("mteams").innerHTML=L.teams.map(x=>`<div class="team${x.ready?" ready":""}"><div class="none" style="font-size:.8rem;font-weight:700">TEAM ${x.n}</div>${x.members.map(m=>{
+    const opts=L.teams.filter(y=>y.id!==x.id&&y.members.length<2).map(y=>`<option value="${y.id}">Team ${y.n} (${esc(y.names)})</option>`).join("");
+    return `<div class="who">${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}<div class="row" style="gap:6px;margin:4px 0 8px"><select data-p="${m.pid}" style="font:inherit;font-size:.85rem;padding:4px 6px;border-radius:8px;background:var(--card);color:var(--ink);border:1px solid var(--line)"><option value="">Move to…</option><option value="new">New solo team</option>${opts}</select><button class="ghost" style="padding:4px 10px;font-size:.85rem" data-kick="${m.pid}" data-n="${esc(m.name)}">Remove</button></div></div>`}).join("")}</div>`).join("");
+  for(const s of document.querySelectorAll("#mteams select"))s.onchange=()=>{if(s.value)act("move",{player:s.dataset.p,team:s.value})};
+  for(const b of document.querySelectorAll("#mteams button[data-kick]"))b.onclick=()=>{if(confirm(`Remove ${b.dataset.n} from the lobby?`))act("kick",{player:b.dataset.kick})}}
+setInterval(()=>{if($("key").value)act("check",{},true)},2500);
 window.onBoard=d=>{last=d;const L=d.lobby;$("start").textContent=d.state==="waiting"?`Start (${L.readyTeams}/${L.totalTeams} teams ready)`:d.state==="closed"?"Start (resume)":"Start";
   if(d.scoring){const s=d.scoring;$("scoring").textContent=`Scoring: ${s.accuracy} pts × tests passed, −${s.perFailedAttempt} per extra compiled attempt (max −${s.maxPenalty}), +${s.speedBonus} speed bonus for a full solve shrinking to 0 at ${s.roundMinutes} min.`}};
-async function act(action){
+async function act(action,extra={},quiet){
   const key=$("key").value;try{sessionStorage.setItem("tk",key)}catch(e){}
-  const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,action})});
-  const d=await r.json();$("msg").textContent=r.ok?"":(d.error||"Error");$("msg").className=r.ok?"none":"bad";
+  let r,d;try{r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,action,...extra})});d=await r.json()}catch(e){return}
+  if(!(quiet&&r.ok))$("msg").textContent=r.ok?"":(d.error||"Error");$("msg").className=r.ok?"none":"bad";
   $("csv").href=API+"/api/results?key="+encodeURIComponent(key);
-  if(r.ok)window.refreshBoard();
+  if(r.ok){admin=d;manage();if(!quiet)window.refreshBoard()}else if(r.status===403){admin=null;manage.sig=null;$("mteams").innerHTML='<div class="empty">Type the password to see the lobby.</div>'}
 }
 $("start").onclick=()=>{const L=last&&last.lobby;if(last&&last.state==="waiting"&&L&&L.readyTeams<L.totalTeams&&!confirm(`Only ${L.readyTeams} of ${L.totalTeams} teams are ready. Start anyway? Teams lock when you start.`))return;act("start")};
 $("stop").onclick=()=>act("stop");

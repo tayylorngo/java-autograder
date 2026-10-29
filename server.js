@@ -30,19 +30,23 @@ const cellPoints = (c) => {
 const fresh = () => ({ state: "waiting", startedAt: null, players: {}, teams: {} });
 let S = fresh();
 try { const j = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); if (j && j.players && j.teams) S = { ...fresh(), ...j }; } catch (e) {}
+Object.values(S.teams).forEach((t, i) => { if (!t.created) t.created = i; if (!t.n) t.n = i + 1; });
 const save = () => { try { fs.writeFileSync(STATE_FILE, JSON.stringify(S)); } catch (e) {} };
 const newId = () => crypto.randomUUID();
 const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 40);
 const nameKey = (n) => cleanName(n).toLowerCase();
 const ONLINE_MS = 15000;
-const teamName = (t) => t.members.map(p => (S.players[p] || { name: "?" }).name).join(" & ");
-const teamMembers = (t) => t.members.map(p => { const pl = S.players[p]; return { name: pl.name, ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
+const teamNames = (t) => t.members.map(p => (S.players[p] || { name: "?" }).name).join(" & ");
+const teamName = (t) => "Team " + t.n + " (" + teamNames(t) + ")";
+// Teams are numbered 1..k in order of creation. While the lobby is open the numbers close up as empty teams vanish; after Start they are frozen.
+function renumber() { if (S.state !== "waiting") return; Object.values(S.teams).filter(t => t.members.length).sort((a, b) => a.created - b.created).forEach((t, i) => t.n = i + 1); }
+const teamMembers = (t, ids) => t.members.map(p => { const pl = S.players[p]; return { ...(ids ? { pid: p } : {}), name: pl.name, ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
 function leaveTeam(pid) {
   const pl = S.players[pid], t = S.teams[pl.team];
   if (t) { t.members = t.members.filter(x => x !== pid); if (!t.members.length) delete S.teams[pl.team]; }
-  pl.team = null;
+  pl.team = null; renumber();
 }
-function soloTeam(pid) { const id = newId(); S.teams[id] = { members: [pid], cells: {} }; S.players[pid].team = id; return id; }
+function soloTeam(pid) { const id = newId(); S.teams[id] = { n: Object.keys(S.teams).length + 1, created: Date.now(), members: [pid], cells: {} }; S.players[pid].team = id; renumber(); return id; }
 function record(team, prog, out) {
   if (!out.total) return null;                                      // not compiled: no attempt counted
   const c = team.cells[prog.id] || (team.cells[prog.id] = { attempts: 0, best: 0, total: out.total, solvedAt: null, points: 0 });
@@ -53,19 +57,22 @@ function record(team, prog, out) {
   save();
   return c;
 }
+// Transient, per team: which programs are being graded right now (so a partner can't double-submit), and the latest
+// result per program (so both partners see the same output). Not persisted.
+const grading = {}, lastResult = {};
 const teamTotals = (t) => {
   const cells = Object.values(t.cells);
   return { points: cells.reduce((a, c) => a + c.points, 0), solved: cells.filter(c => c.solvedAt !== null).length, tests: cells.reduce((a, c) => a + c.best, 0),
     last: cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0) };
 };
-const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, name: teamName(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
+const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, n: t.n, name: "Team " + t.n, names: teamNames(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
   .sort((a, b) => b.points - a.points || b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.name.localeCompare(b.name));
-function lobby() {
-  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => { const m = teamMembers(t); return { id, name: teamName(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
+function lobby(ids) {
+  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).sort((a, b) => a[1].n - b[1].n).map(([id, t]) => { const m = teamMembers(t, ids); return { id, n: t.n, name: "Team " + t.n, names: teamNames(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
   return { teams, readyTeams: teams.filter(t => t.ready).length, totalTeams: teams.length, players: Object.keys(S.players).length };
 }
-function board() {
-  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, lobby: lobby(),
+function board(ids) {
+  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, lobby: lobby(ids),
     programs: PROGRAMS.map(p => ({ id: p.id, title: p.title.replace(/^Program \d+ — /, ""), n: p.title.match(/\d+/)[0] })), rows: rankTeams() };
 }
 function me(pid) {
@@ -74,7 +81,8 @@ function me(pid) {
   if (!pl.team || !S.teams[pl.team]) soloTeam(pid);
   const t = S.teams[pl.team], rows = rankTeams(), rank = rows.findIndex(r => r.id === pl.team) + 1;
   return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, me: { id: pid, name: pl.name, ready: !!pl.ready },
-    team: { id: pl.team, name: teamName(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length }, lobby: lobby() };
+    team: { id: pl.team, n: t.n, name: "Team " + t.n, names: teamNames(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length,
+      grading: grading[pl.team] || {}, last: Object.fromEntries(Object.entries(lastResult[pl.team] || {}).map(([k, v]) => [k, { by: v.by, at: v.at, passed: v.out.passed, total: v.out.total, error: v.out.error || null }])) }, lobby: lobby() };
 }
 // Student processes get a minimal environment: never TEACHER_KEY or anything else from the host.
 const childEnv = {};
@@ -150,7 +158,6 @@ async function grade(prog, code) {
   code = code.replace(/^﻿/, "");                                   // byte-order mark from Windows editors
   const pk = /^[ \t]*package\s+[\w.]+\s*;[ \t]*/m;                       // IDE projects often add one
   if (pk.test(code)) { code = code.replace(pk, ""); checks.push({ ok: true, msg: "Ignored the package line (not needed for this activity)." }); }
-  if (!/^\s*(\/\/|\/\*)/.test(code)) checks.push({ ok: false, soft: true, msg: "File should start with a comment header (names and date)." });
   const sig = squash(prog.header);
   const headerOk = squash(code).includes(sig);
   checks.push({ ok: headerOk, msg: headerOk ? "Method header matches." : "Required method header not found exactly as given: " + prog.header });
@@ -167,17 +174,18 @@ async function grade(prog, code) {
     if (c.code !== 0) return { error: "Compile error", detail: (c.err || c.out || (c.timedOut ? "javac took too long" : "")).split(dir + "/").join("").slice(0, 3000), checks };
     const results = [];
     let slow = 0;
+    let ti = 0;
     for (const t of prog.tests) {
-      if (slow >= 2) { const res = { name: t.name, hidden: t.hidden, pass: false, note: "Skipped — your program was too slow on earlier tests." }; if (!t.hidden) { res.input = t.input; res.expected = t.expected; res.actual = ""; } results.push(res); continue; }
+      const name = "Test " + (++ti);
+      if (slow >= 2) { results.push({ name, pass: false, note: "Skipped — your program was too slow on earlier tests.", input: t.input, expected: t.expected, actual: "" }); continue; }
       const r = await run("java", javaArgs(dir, prog.cls), { cwd: dir, input: t.input.join("\n") + "\n", timeout: RUN_MS, limit: true });
       const pass = !r.timedOut && r.code === 0 && norm(r.out) === norm(t.expected);
-      const res = { name: t.name, hidden: t.hidden, pass };
+      const res = { name, pass, input: t.input, expected: t.expected, actual: r.out };
       if (r.timedOut) slow++;
       const errLines = r.err.split("\n").filter(l => l.trim() && !JVM_NOISE.test(l));
       if (r.flooded) res.note = "Your program printed far too much output (infinite loop?)";
       else if (r.timedOut) res.note = "Took too long (infinite loop, or waiting for more input than the prompt asks for?)";
-      else if (r.code !== 0) res.note = "Program crashed" + (t.hidden ? "." : ": " + errLines.slice(0, 2).join(" ").slice(0, 300));
-      if (!t.hidden) { res.input = t.input; res.expected = t.expected; res.actual = r.out; }
+      else if (r.code !== 0) res.note = "Program crashed: " + errLines.slice(0, 2).join(" ").slice(0, 300);
       results.push(res);
     }
     return { checks, results, passed: results.filter(r => r.pass).length, total: results.length };
@@ -230,7 +238,7 @@ const server = http.createServer((req, res) => {
   const ip = clientIp(req);
   if (req.method === "OPTIONS") return send(res, 204, "");
   if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header, prompt: p.prompt || "",
-    samples: p.tests.filter(t => !t.hidden).map(t => ({ name: t.name, input: t.input, expected: t.expected })) })));
+    samples: p.tests.map((t, i) => ({ name: "Test " + (i + 1), input: t.input, expected: t.expected })) })));
   if (url.pathname === "/api/status") return send(res, 200, { state: S.state });
   if (url.pathname === "/api/board") return send(res, 200, board());
   if (url.pathname === "/api/admin" && req.method === "POST") {
@@ -240,12 +248,18 @@ const server = http.createServer((req, res) => {
       if (!TEACHER_KEY) return send(res, 403, { error: "TEACHER_KEY is not set on the server." });
       if (tooManyFails(ip)) return send(res, 429, { error: "Too many wrong passwords — wait 10 minutes." });
       if (typeof j.key !== "string" || j.key !== TEACHER_KEY) { fails.get(ip).push(Date.now()); return send(res, 403, { error: "Wrong password." }); }
-      if (j.action === "start") { if (S.state === "waiting" || !S.startedAt) S.startedAt = Date.now(); S.state = "open"; }
+      if (j.action === "start") { renumber(); if (S.state === "waiting" || !S.startedAt) S.startedAt = Date.now(); S.state = "open"; }
       else if (j.action === "stop") S.state = "closed";
-      else if (j.action === "reset") S = fresh();                                             // everyone back to the name screen
-      else if (j.action === "lobby") { S.state = "waiting"; S.startedAt = null; for (const t of Object.values(S.teams)) t.cells = {}; for (const p of Object.values(S.players)) p.ready = false; }  // keep teams, clear scores
+      else if (j.action === "reset") { S = fresh(); for (const k of Object.keys(lastResult)) delete lastResult[k]; }   // everyone back to the name screen
+      else if (j.action === "lobby") { S.state = "waiting"; S.startedAt = null; for (const t of Object.values(S.teams)) t.cells = {}; for (const p of Object.values(S.players)) p.ready = false; renumber(); for (const k of Object.keys(lastResult)) delete lastResult[k]; }  // keep teams, clear scores
+      else if (j.action === "kick") { const pl = S.players[j.player]; if (!pl) return send(res, 404, { error: "That student is gone already." }); leaveTeam(j.player); delete S.players[j.player]; }
+      else if (j.action === "move") {
+        const pl = S.players[j.player]; if (!pl) return send(res, 404, { error: "That student is gone already." });
+        if (j.team === "new") { leaveTeam(j.player); soloTeam(j.player); }
+        else { const t = S.teams[j.team]; if (!t || !t.members.length) return send(res, 404, { error: "That team is gone." }); if (t.members.length >= 2) return send(res, 409, { error: "That team is full." }); if (j.team !== pl.team) { leaveTeam(j.player); t.members.push(j.player); pl.team = j.team; renumber(); } }
+      }
       else if (j.action !== "check") return send(res, 400, { error: "Unknown action" });
-      save(); send(res, 200, board());
+      save(); send(res, 200, board(true));
     });
     return;
   }
@@ -272,6 +286,10 @@ const server = http.createServer((req, res) => {
     const id = newId(); S.players[id] = { name, team: null, ready: false, lastSeen: Date.now() }; soloTeam(id); save();
     send(res, 200, me(id));
   });
+  if (url.pathname === "/api/result") {
+    const pl = S.players[String(url.searchParams.get("id") || "")]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
+    const v = (lastResult[pl.team] || {})[String(url.searchParams.get("program") || "")]; return v ? send(res, 200, { by: v.by, at: v.at, ...v.out }) : send(res, 404, { error: "No upload yet." });
+  }
   if (url.pathname === "/api/me") { const m = me(String(url.searchParams.get("id") || "")); return m ? send(res, 200, m) : send(res, 404, { error: "Not in the lobby. Type your name again." }); }
   if (url.pathname === "/api/team" && req.method === "POST") return readJson(j => {
     const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
@@ -308,16 +326,23 @@ const server = http.createServer((req, res) => {
         if (!pl.team || !S.teams[pl.team]) soloTeam(j.id);
         const team = S.teams[pl.team], existing = team.cells[prog.id];
         if (existing && existing.solvedAt !== null) return send(res, 409, { error: "Your team already solved this one!" });
+        const g = grading[pl.team] || (grading[pl.team] = {});
+        if (g[prog.id]) return send(res, 409, { error: g[prog.id].by + " is running tests on this program right now — wait for that result.", busy: true });
+        g[prog.id] = { by: pl.name, since: Date.now() };
+        try {
         await slot();
         try {
           const out = await grade(prog, j.code);
           let cell = null;
           if (S.state === "open") cell = record(team, prog, out);
           const tot = teamTotals(team);
+          const at = Date.now(), score = cell ? { attempts: cell.attempts, best: cell.best, total: cell.total, solved: cell.solvedAt !== null, points: cell.points } : null;
+          (lastResult[pl.team] || (lastResult[pl.team] = {}))[prog.id] = { by: pl.name, at, out: { ...out, score } };
           try { fs.appendFileSync(LOG, JSON.stringify({ time: new Date().toISOString(), team: teamName(team), player: pl.name, program: prog.id, passed: out.passed || 0, total: out.total || prog.tests.length, compiled: !out.error || out.error !== "Compile error", points: cell ? cell.points : null }) + "\n"); } catch (e) {}
-          send(res, 200, { ...out, score: cell ? { attempts: cell.attempts, best: cell.best, total: cell.total, solved: cell.solvedAt !== null, points: cell.points } : null, team: { points: tot.points, solved: tot.solved } });
+          send(res, 200, { ...out, score, at, by: pl.name, team: { points: tot.points, solved: tot.solved } });
         } catch (e) { console.error("grade error", e); send(res, 500, { error: "Grader error — tell Mr. Taylor." }); }
         finally { release(); }
+        } finally { delete g[prog.id]; }
       } catch (e) { console.error("request error", e); send(res, 500, { error: "Grader error — tell Mr. Taylor." }); }
     });
     return;

@@ -15,13 +15,13 @@
       const L = data.lobby;
       if (!L.teams.length) { el.innerHTML = '<div class="empty">Get ready — go to the site and type your name to enter the lobby.</div>'; return; }
       el.innerHTML = `<div class="lobbyhead"><h2>Lobby</h2><span class="${L.readyTeams === L.totalTeams ? "ok" : "none"}">${L.readyTeams} of ${L.totalTeams} teams ready &middot; ${L.players} student${L.players === 1 ? "" : "s"}</span></div><div class="teams">` +
-        L.teams.map(t => `<div class="team${t.ready ? " ready" : ""}">${t.members.map(m => `<div class="who">${esc(m.name)}${m.ready ? '<span class="badge ready">ready</span>' : ""}${m.online ? "" : '<span class="badge off">away</span>'}</div>`).join("")}${t.members.length === 1 ? '<div class="none" style="font-size:.85rem">' + (t.ready ? "solo" : "looking for a partner") + "</div>" : ""}</div>`).join("") + "</div>";
+        L.teams.map(t => `<div class="team${t.ready ? " ready" : ""}"><div class="none" style="font-size:.8rem;font-weight:700">TEAM ${t.n}</div>${t.members.map(m => `<div class="who">${esc(m.name)}${m.ready ? '<span class="badge ready">ready</span>' : ""}${m.online ? "" : '<span class="badge off">away</span>'}</div>`).join("")}${t.members.length === 1 ? '<div class="none" style="font-size:.85rem">' + (t.ready ? "solo" : "looking for a partner") + "</div>" : ""}</div>`).join("") + "</div>";
       return;
     }
     if (!data.rows.length) { el.innerHTML = '<div class="empty">No teams yet.</div>'; return; }
     let h = '<table><thead><tr><th>#</th><th class="name">Team</th>' + data.programs.map(p => `<th>P${p.n}<span class="small">${esc(p.title)}</span></th>`).join("") + "<th>Points</th></tr></thead><tbody>";
     data.rows.forEach((r, i) => {
-      h += `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name">${esc(r.name)}</td>`;
+      h += `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name">${esc(r.name)}<span class="small">${esc(r.names)}</span></td>`;
       for (const p of data.programs) {
         const c = r.cells[p.id];
         h += !c ? '<td class="none">&mdash;</td>' : c.solvedAt !== null ? `<td class="ok">&#10003;<span class="small">${mmss(c.solvedAt)} &middot; ${c.points} pts</span></td>` : `<td class="part">${c.best}/${c.total}<span class="small">${c.points} pts</span></td>`;
