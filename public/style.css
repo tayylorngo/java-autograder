@@ -22,3 +22,14 @@ button:disabled{opacity:.45;cursor:default}
 input[type=password]{padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit}
 a{color:var(--orange)}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .bad{color:var(--bad)}
+/* lobby / teams */
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px}
+.team{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--code)}
+.team.mine{border-color:var(--orange)}.team.ready{border-color:var(--ok)}
+.team .who{font-weight:700;margin:2px 0}.team .who small{font-weight:400;color:var(--mute)}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);color:var(--mute)}
+.badge.ready{color:var(--ok);border-color:var(--ok)}.badge.off{color:var(--bad);border-color:var(--bad)}
+.team button{padding:7px 14px;margin-top:8px;font-size:.9rem}
+.join{background:var(--orange);color:#1b1000}
+.lobbyhead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+h2{font-size:1.2rem;margin:0 0 8px}

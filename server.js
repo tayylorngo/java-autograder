@@ -1,6 +1,7 @@
 // Java autograder: zero dependencies (Node 18+ and a JDK on the PATH).
 const http = require("http"), fs = require("fs"), path = require("path"), os = require("os");
 const { spawn } = require("child_process");
+const crypto = require("crypto");
 const PROGRAMS = JSON.parse(fs.readFileSync(path.join(__dirname, "tests.json"), "utf8"));
 const PORT = process.env.PORT || 8080;
 const TEACHER_KEY = process.env.TEACHER_KEY || "";          // set this to use /teacher.html and /api/results?key=...
@@ -10,29 +11,70 @@ const RUN_MS = +process.env.RUN_MS || 3000;                 // per-test time lim
 const COMPILE_MS = 20000, MAX_CODE = 30000, MAX_OUT = 20000, MAX_PARALLEL = +process.env.MAX_PARALLEL || 2;
 const STATE_FILE = process.env.STATE_FILE || path.join(path.dirname(LOG), "state.json");
 const POLICY = path.join(__dirname, "grader.policy");       // Java security-manager policy: grants student code nothing
-// state: "waiting" (before Start) | "open" (uploads allowed) | "closed" (paused/finished)
-let S = { state: "waiting", startedAt: null, entries: {} };
-try { S = { ...S, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch (e) {}
+// ---- scoring (edit here; the README documents it) ----
+const SCORING = {
+  accuracy: 100,            // points for a program = accuracy * (best tests passed / total)
+  perFailedAttempt: 5,      // minus this for every compiled upload after the first on that program...
+  maxPenalty: 30,           // ...capped here
+  speedBonus: 50,           // full solve at minute 0 earns this, shrinking linearly to 0 at roundMinutes
+  roundMinutes: +process.env.ROUND_MINUTES || 40
+};
+const cellPoints = (c) => {
+  const acc = Math.round(SCORING.accuracy * c.best / c.total);
+  const pen = Math.min(SCORING.maxPenalty, SCORING.perFailedAttempt * Math.max(0, c.attempts - 1));
+  const bonus = c.solvedAt === null ? 0 : Math.round(SCORING.speedBonus * Math.max(0, 1 - c.solvedAt / (SCORING.roundMinutes * 60000)));
+  return Math.max(0, acc - pen) + bonus;
+};
+// state: "waiting" (lobby; teams can form) | "open" (uploads allowed, teams locked) | "closed" (paused/finished)
+// players: { id: { name, team, ready, lastSeen } }   teams: { id: { members: [playerId], cells: { progId: { attempts, best, total, solvedAt, points } } } }
+const fresh = () => ({ state: "waiting", startedAt: null, players: {}, teams: {} });
+let S = fresh();
+try { const j = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); if (j && j.players && j.teams) S = { ...fresh(), ...j }; } catch (e) {}
 const save = () => { try { fs.writeFileSync(STATE_FILE, JSON.stringify(S)); } catch (e) {} };
-const nameKey = (n) => n.trim().replace(/\s+/g, " ").toLowerCase();
-function record(student, prog, out) {
-  const k = nameKey(student); if (!k) return;
-  const e = S.entries[k] || (S.entries[k] = { name: student.trim().replace(/\s+/g, " "), cells: {} });
-  if (!out.total) return;
-  const c = e.cells[prog.id] || (e.cells[prog.id] = { passed: 0, total: out.total, solvedAt: null });
-  if (out.passed > c.passed) c.passed = out.passed;
+const newId = () => crypto.randomUUID();
+const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 40);
+const nameKey = (n) => cleanName(n).toLowerCase();
+const ONLINE_MS = 15000;
+const teamName = (t) => t.members.map(p => (S.players[p] || { name: "?" }).name).join(" & ");
+const teamMembers = (t) => t.members.map(p => { const pl = S.players[p]; return { name: pl.name, ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
+function leaveTeam(pid) {
+  const pl = S.players[pid], t = S.teams[pl.team];
+  if (t) { t.members = t.members.filter(x => x !== pid); if (!t.members.length) delete S.teams[pl.team]; }
+  pl.team = null;
+}
+function soloTeam(pid) { const id = newId(); S.teams[id] = { members: [pid], cells: {} }; S.players[pid].team = id; return id; }
+function record(team, prog, out) {
+  if (!out.total) return null;                                      // not compiled: no attempt counted
+  const c = team.cells[prog.id] || (team.cells[prog.id] = { attempts: 0, best: 0, total: out.total, solvedAt: null, points: 0 });
+  c.attempts++;
+  if (out.passed > c.best) c.best = out.passed;
   if (out.passed === out.total && c.solvedAt === null) c.solvedAt = Date.now() - (S.startedAt || Date.now());
+  c.points = cellPoints(c);
   save();
+  return c;
+}
+const teamTotals = (t) => {
+  const cells = Object.values(t.cells);
+  return { points: cells.reduce((a, c) => a + c.points, 0), solved: cells.filter(c => c.solvedAt !== null).length, tests: cells.reduce((a, c) => a + c.best, 0),
+    last: cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0) };
+};
+const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, name: teamName(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
+  .sort((a, b) => b.points - a.points || b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.name.localeCompare(b.name));
+function lobby() {
+  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => { const m = teamMembers(t); return { id, name: teamName(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
+  return { teams, readyTeams: teams.filter(t => t.ready).length, totalTeams: teams.length, players: Object.keys(S.players).length };
 }
 function board() {
-  const rows = Object.values(S.entries).map(e => {
-    const cells = e.cells; const ids = Object.keys(cells);
-    const solved = ids.filter(i => cells[i].solvedAt !== null).length;
-    const tests = ids.reduce((a, i) => a + cells[i].passed, 0);
-    const last = ids.reduce((a, i) => cells[i].solvedAt !== null ? Math.max(a, cells[i].solvedAt) : a, 0);
-    return { name: e.name, solved, tests, last, cells };
-  }).sort((a, b) => b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.name.localeCompare(b.name));
-  return { state: S.state, startedAt: S.startedAt, now: Date.now(), programs: PROGRAMS.map(p => ({ id: p.id, title: p.title.replace(/^Program \d+ — /, ""), n: p.title.match(/\d+/)[0] })), rows };
+  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, lobby: lobby(),
+    programs: PROGRAMS.map(p => ({ id: p.id, title: p.title.replace(/^Program \d+ — /, ""), n: p.title.match(/\d+/)[0] })), rows: rankTeams() };
+}
+function me(pid) {
+  const pl = S.players[pid]; if (!pl) return null;
+  pl.lastSeen = Date.now();
+  if (!pl.team || !S.teams[pl.team]) soloTeam(pid);
+  const t = S.teams[pl.team], rows = rankTeams(), rank = rows.findIndex(r => r.id === pl.team) + 1;
+  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, me: { id: pid, name: pl.name, ready: !!pl.ready },
+    team: { id: pl.team, name: teamName(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length }, lobby: lobby() };
 }
 // Student processes get a minimal environment: never TEACHER_KEY or anything else from the host.
 const childEnv = {};
@@ -187,7 +229,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x");
   const ip = clientIp(req);
   if (req.method === "OPTIONS") return send(res, 204, "");
-  if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header,
+  if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header, prompt: p.prompt || "",
     samples: p.tests.filter(t => !t.hidden).map(t => ({ name: t.name, input: t.input, expected: t.expected })) })));
   if (url.pathname === "/api/status") return send(res, 200, { state: S.state });
   if (url.pathname === "/api/board") return send(res, 200, board());
@@ -200,7 +242,8 @@ const server = http.createServer((req, res) => {
       if (typeof j.key !== "string" || j.key !== TEACHER_KEY) { fails.get(ip).push(Date.now()); return send(res, 403, { error: "Wrong password." }); }
       if (j.action === "start") { if (S.state === "waiting" || !S.startedAt) S.startedAt = Date.now(); S.state = "open"; }
       else if (j.action === "stop") S.state = "closed";
-      else if (j.action === "reset") S = { state: "waiting", startedAt: null, entries: {} };
+      else if (j.action === "reset") S = fresh();                                             // everyone back to the name screen
+      else if (j.action === "lobby") { S.state = "waiting"; S.startedAt = null; for (const t of Object.values(S.teams)) t.cells = {}; for (const p of Object.values(S.players)) p.ready = false; }  // keep teams, clear scores
       else if (j.action !== "check") return send(res, 400, { error: "Unknown action" });
       save(); send(res, 200, board());
     });
@@ -211,9 +254,44 @@ const server = http.createServer((req, res) => {
     if (!TEACHER_KEY || url.searchParams.get("key") !== TEACHER_KEY) { fails.get(ip).push(Date.now()); return send(res, 403, { error: "forbidden" }); }
     const rows = [];
     if (fs.existsSync(LOG)) for (const line of fs.readFileSync(LOG, "utf8").split("\n")) { try { if (line.trim()) rows.push(JSON.parse(line)); } catch (e) {} }
-    const csv = ["time,student,program,passed,total,compiled", ...rows.map(r => [r.time, JSON.stringify(r.student), r.program, r.passed, r.total, r.compiled].join(","))].join("\n");
+    const csv = ["time,team,player,program,passed,total,compiled,points", ...rows.map(r => [r.time, JSON.stringify(r.team || r.student || ""), JSON.stringify(r.player || ""), r.program, r.passed, r.total, r.compiled, r.points == null ? "" : r.points].join(","))].join("\n");
     return send(res, 200, csv, "text/csv");
   }
+  // ---- students: join, lobby, teams, ready ----
+  const readJson = (cb) => { let b = ""; req.on("data", d => { b += d; if (b.length > 4000) req.destroy(); }); req.on("end", () => { let j; try { j = JSON.parse(b); } catch (e) { return send(res, 400, { error: "Bad request" }); } try { cb(j || {}); } catch (e) { console.error("api error", e); send(res, 500, { error: "Server error" }); } }); };
+  if (url.pathname === "/api/join" && req.method === "POST") return readJson(j => {
+    if (limited(ip)) return send(res, 429, { error: "Too many requests — wait a minute." });
+    const name = cleanName(j.name);
+    if (typeof j.id === "string" && S.players[j.id]) return send(res, 200, me(j.id));              // same browser, page reloaded
+    if (name.length < 2) return send(res, 400, { error: "Type your name (at least 2 letters)." });
+    const dup = Object.entries(S.players).find(([, p]) => nameKey(p.name) === nameKey(name));
+    if (dup) {
+      if (Date.now() - dup[1].lastSeen < ONLINE_MS) return send(res, 409, { error: "Someone with that name is already in the lobby. Add your last initial." });
+      return send(res, 200, me(dup[0]));                                                           // same student, new device/browser
+    }
+    const id = newId(); S.players[id] = { name, team: null, ready: false, lastSeen: Date.now() }; soloTeam(id); save();
+    send(res, 200, me(id));
+  });
+  if (url.pathname === "/api/me") { const m = me(String(url.searchParams.get("id") || "")); return m ? send(res, 200, m) : send(res, 404, { error: "Not in the lobby. Type your name again." }); }
+  if (url.pathname === "/api/team" && req.method === "POST") return readJson(j => {
+    const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
+    if (S.state !== "waiting") return send(res, 409, { error: "Teams are locked once the challenge has started." });
+    if (pl.ready) return send(res, 409, { error: "Un-ready first to change teams." });
+    if (j.action === "join") {
+      const t = S.teams[j.team];
+      if (!t || !t.members.length || j.team === pl.team) return send(res, 404, { error: "That team is gone." });
+      if (t.members.length >= 2) return send(res, 409, { error: "That team is full." });
+      if (S.players[t.members[0]].ready) return send(res, 409, { error: "That student already pressed Ready (going solo)." });
+      leaveTeam(j.id); t.members.push(j.id); pl.team = j.team;
+    } else if (j.action === "leave") { leaveTeam(j.id); soloTeam(j.id); }
+    else return send(res, 400, { error: "Unknown action" });
+    save(); send(res, 200, me(j.id));
+  });
+  if (url.pathname === "/api/ready" && req.method === "POST") return readJson(j => {
+    const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
+    if (S.state === "waiting") { pl.ready = !!j.ready; save(); }
+    send(res, 200, me(j.id));
+  });
   if (url.pathname === "/api/grade" && req.method === "POST") {
     if (S.state !== "open") return send(res, 423, { error: S.state === "waiting" ? "Mr. Taylor hasn't pressed Start yet." : "Submissions are closed.", locked: true });
     if (limited(ip)) return send(res, 429, { error: "Too many submissions — wait a few minutes." });
@@ -226,13 +304,18 @@ const server = http.createServer((req, res) => {
         const prog = PROGRAMS.find(p => p.id === j.program);
         if (!prog || typeof j.code !== "string") return send(res, 400, { error: "Pick a program and upload a .java file." });
         if (j.code.length > MAX_CODE) return send(res, 413, { error: "File too large (max 30 KB)." });
+        const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "You are not in the lobby any more. Reload the page and type your name again.", rejoin: true });
+        if (!pl.team || !S.teams[pl.team]) soloTeam(j.id);
+        const team = S.teams[pl.team], existing = team.cells[prog.id];
+        if (existing && existing.solvedAt !== null) return send(res, 409, { error: "Your team already solved this one!" });
         await slot();
         try {
           const out = await grade(prog, j.code);
-          const student = String(j.student || "").slice(0, 60);
-          if (S.state === "open") record(student, prog, out);
-          try { fs.appendFileSync(LOG, JSON.stringify({ time: new Date().toISOString(), student, program: prog.id, passed: out.passed || 0, total: out.total || prog.tests.length, compiled: !out.error || out.error !== "Compile error" }) + "\n"); } catch (e) {}
-          send(res, 200, out);
+          let cell = null;
+          if (S.state === "open") cell = record(team, prog, out);
+          const tot = teamTotals(team);
+          try { fs.appendFileSync(LOG, JSON.stringify({ time: new Date().toISOString(), team: teamName(team), player: pl.name, program: prog.id, passed: out.passed || 0, total: out.total || prog.tests.length, compiled: !out.error || out.error !== "Compile error", points: cell ? cell.points : null }) + "\n"); } catch (e) {}
+          send(res, 200, { ...out, score: cell ? { attempts: cell.attempts, best: cell.best, total: cell.total, solved: cell.solvedAt !== null, points: cell.points } : null, team: { points: tot.points, solved: tot.solved } });
         } catch (e) { console.error("grade error", e); send(res, 500, { error: "Grader error — tell Mr. Taylor." }); }
         finally { release(); }
       } catch (e) { console.error("request error", e); send(res, 500, { error: "Grader error — tell Mr. Taylor." }); }

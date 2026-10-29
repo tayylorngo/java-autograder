@@ -6,10 +6,11 @@
 <div class="card">
   <div class="row" style="margin-bottom:14px"><input id="key" type="password" placeholder="Teacher password" autocomplete="off"><span id="msg" class="none"></span></div>
   <div class="row">
-    <button class="go" id="start">Start</button><button class="stop" id="stop">Stop</button><button class="ghost" id="reset">Reset leaderboard</button>
+    <button class="go" id="start">Start</button><button class="stop" id="stop">Stop</button><button class="ghost" id="lobby">Back to lobby</button><button class="ghost" id="reset">Reset everything</button>
   </div>
-  <p class="none" style="margin:14px 0 0">Students can upload only while the chip says <b>LIVE</b>. <b>Stop</b> pauses uploads (Start resumes the same timer). <b>Reset</b> clears all scores and goes back to waiting.
-  &nbsp;<a href="board.html" target="_blank">Projector leaderboard</a> &middot; <a id="csv" href="#" target="_blank">Download CSV</a></p>
+  <p class="none" style="margin:14px 0 0">Students type their name, form teams of 2 in the lobby and press Ready. <b>Start</b> locks teams and opens uploads (the button shows how many teams are ready). <b>Stop</b> pauses uploads; Start again resumes the same timer. <b>Back to lobby</b> keeps the teams but clears scores and the timer. <b>Reset everything</b> also empties the lobby, so students have to type their names again.
+  &nbsp;<a href="board.html" target="_blank">Projector view</a> &middot; <a id="csv" href="#" target="_blank">Download CSV</a></p>
+  <p class="none" id="scoring" style="margin:8px 0 0"></p>
 </div>
 <div class="card" id="board"></div>
 </main>
@@ -17,6 +18,9 @@
 <script>
 const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(id);
 try{$("key").value=sessionStorage.getItem("tk")||""}catch(e){}
+let last=null;
+window.onBoard=d=>{last=d;const L=d.lobby;$("start").textContent=d.state==="waiting"?`Start (${L.readyTeams}/${L.totalTeams} teams ready)`:d.state==="closed"?"Start (resume)":"Start";
+  if(d.scoring){const s=d.scoring;$("scoring").textContent=`Scoring: ${s.accuracy} pts × tests passed, −${s.perFailedAttempt} per extra compiled attempt (max −${s.maxPenalty}), +${s.speedBonus} speed bonus for a full solve shrinking to 0 at ${s.roundMinutes} min.`}};
 async function act(action){
   const key=$("key").value;try{sessionStorage.setItem("tk",key)}catch(e){}
   const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,action})});
@@ -24,8 +28,10 @@ async function act(action){
   $("csv").href=API+"/api/results?key="+encodeURIComponent(key);
   if(r.ok)window.refreshBoard();
 }
-$("start").onclick=()=>act("start");$("stop").onclick=()=>act("stop");
-$("reset").onclick=()=>{if(confirm("Clear all scores and go back to waiting?"))act("reset")};
+$("start").onclick=()=>{const L=last&&last.lobby;if(last&&last.state==="waiting"&&L&&L.readyTeams<L.totalTeams&&!confirm(`Only ${L.readyTeams} of ${L.totalTeams} teams are ready. Start anyway? Teams lock when you start.`))return;act("start")};
+$("stop").onclick=()=>act("stop");
+$("lobby").onclick=()=>{if(confirm("Back to the lobby? Teams stay, all scores and the timer are cleared."))act("lobby")};
+$("reset").onclick=()=>{if(confirm("Reset EVERYTHING? Scores, teams and the lobby are cleared; students must type their names again."))act("reset")};
 $("key").addEventListener("change",()=>act("check"));
 if($("key").value)act("check");
 </script></body></html>

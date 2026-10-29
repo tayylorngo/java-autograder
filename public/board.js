@@ -1,4 +1,4 @@
-// Shared by board.html (projector view) and teacher.html. Polls /api/board and draws the leaderboard.
+// Shared by board.html (projector view) and teacher.html. Polls /api/board and draws the lobby (while waiting) or the leaderboard.
 (function () {
   const API = (window.API_URL || "").replace(/\/$/, "");
   const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -11,15 +11,22 @@
     if (chip) { chip.className = "chip " + data.state; chip.textContent = label[data.state]; }
     if (timer) timer.textContent = data.startedAt ? mmss(Date.now() + offset - data.startedAt) : "";
     const el = document.getElementById("board"); if (!el) return;
-    if (!data.rows.length) { el.innerHTML = '<div class="empty">' + (data.state === "waiting" ? "Get ready — uploads open when Mr. Taylor presses Start." : "No submissions yet.") + "</div>"; return; }
-    let h = '<table><thead><tr><th>#</th><th class="name">Pair</th>' + data.programs.map(p => `<th>P${p.n}<span class="small">${esc(p.title)}</span></th>`).join("") + "<th>Solved</th></tr></thead><tbody>";
+    if (data.state === "waiting") {
+      const L = data.lobby;
+      if (!L.teams.length) { el.innerHTML = '<div class="empty">Get ready — go to the site and type your name to enter the lobby.</div>'; return; }
+      el.innerHTML = `<div class="lobbyhead"><h2>Lobby</h2><span class="${L.readyTeams === L.totalTeams ? "ok" : "none"}">${L.readyTeams} of ${L.totalTeams} teams ready &middot; ${L.players} student${L.players === 1 ? "" : "s"}</span></div><div class="teams">` +
+        L.teams.map(t => `<div class="team${t.ready ? " ready" : ""}">${t.members.map(m => `<div class="who">${esc(m.name)}${m.ready ? '<span class="badge ready">ready</span>' : ""}${m.online ? "" : '<span class="badge off">away</span>'}</div>`).join("")}${t.members.length === 1 ? '<div class="none" style="font-size:.85rem">' + (t.ready ? "solo" : "looking for a partner") + "</div>" : ""}</div>`).join("") + "</div>";
+      return;
+    }
+    if (!data.rows.length) { el.innerHTML = '<div class="empty">No teams yet.</div>'; return; }
+    let h = '<table><thead><tr><th>#</th><th class="name">Team</th>' + data.programs.map(p => `<th>P${p.n}<span class="small">${esc(p.title)}</span></th>`).join("") + "<th>Points</th></tr></thead><tbody>";
     data.rows.forEach((r, i) => {
       h += `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name">${esc(r.name)}</td>`;
       for (const p of data.programs) {
         const c = r.cells[p.id];
-        h += !c ? '<td class="none">&mdash;</td>' : c.solvedAt !== null ? `<td class="ok">&#10003;<span class="small">${mmss(c.solvedAt)}</span></td>` : `<td class="part">${c.passed}/${c.total}</td>`;
+        h += !c ? '<td class="none">&mdash;</td>' : c.solvedAt !== null ? `<td class="ok">&#10003;<span class="small">${mmss(c.solvedAt)} &middot; ${c.points} pts</span></td>` : `<td class="part">${c.best}/${c.total}<span class="small">${c.points} pts</span></td>`;
       }
-      h += `<td><b>${r.solved}</b> / ${data.programs.length}</td></tr>`;
+      h += `<td><b>${r.points}</b><span class="small">${r.solved} of ${data.programs.length} solved</span></td></tr>`;
     });
     el.innerHTML = h + "</tbody></table>";
   }

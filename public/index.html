@@ -1,101 +1,130 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Java Autograder</title>
+<title>Halloween Pair Challenge</title><link rel="stylesheet" href="style.css">
 <style>
-:root{--bg:#17111f;--card:#231a30;--ink:#f3ecfa;--mute:#b6a8c8;--line:#3a2d4d;--orange:#ff8a1f;--ok:#5fd68a;--bad:#ff6b6b;--code:#120d19}
-@media (prefers-color-scheme:light){:root{--bg:#f6f1fb;--card:#fff;--ink:#1f1530;--mute:#5d4f73;--line:#ddd0ee;--orange:#c75b00;--ok:#16794a;--bad:#b3261e;--code:#f1ebf8}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:760px;margin:0 auto;padding:28px 16px 60px}
-h1{font-size:1.7rem;margin:0 0 4px}h1 span{color:var(--orange)}
-.sub{color:var(--mute);margin:0 0 22px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
-label{display:block;font-weight:600;margin:0 0 6px}
-input[type=text],select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit}
-.row{margin-bottom:16px}
-.need{margin-top:8px;font-size:.92rem;color:var(--mute)}.need code{margin:0 2px}
+main{max-width:860px}
+input[type=text]{flex:1;min-width:200px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit}
 code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem}
 code{background:var(--code);padding:2px 6px;border-radius:6px}
 pre{background:var(--code);padding:10px 12px;border-radius:10px;overflow:auto;margin:6px 0;white-space:pre-wrap;word-break:break-word}
-.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;cursor:pointer;color:var(--mute)}
-.drop.over,.drop:focus-visible{border-color:var(--orange);color:var(--ink);outline:none}
-.drop b{color:var(--ink)}
-button{width:100%;padding:13px;border:0;border-radius:10px;background:var(--orange);color:#1b1000;font:inherit;font-weight:700;cursor:pointer}
-button:disabled{opacity:.5;cursor:default}
+.lock{text-align:center;font-size:1.1rem;font-weight:700;border-color:var(--orange)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:var(--mute);margin:10px 0}
+.drop.over,.drop:focus-visible{border-color:var(--orange);color:var(--ink);outline:none}.drop b{color:var(--ink)}
+button.run{width:100%;padding:13px;background:var(--orange);color:#1b1000}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tab{flex:1;min-width:140px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600}
+.tab.cur{border-color:var(--orange);box-shadow:inset 0 0 0 1px var(--orange)}.tab .st{display:block;font-size:.8rem;font-weight:400;color:var(--mute)}
+.tab.done .st{color:var(--ok)}
+.scorebar{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline}.scorebar b{font-size:1.5rem}
 .score{font-size:2rem;font-weight:800}.score small{font-size:1rem;font-weight:500;color:var(--mute)}
 .bar{height:10px;background:var(--code);border-radius:99px;overflow:hidden;margin:8px 0 14px}.bar i{display:block;height:100%;background:var(--ok)}
 ul{list-style:none;margin:0;padding:0}li{padding:9px 0;border-top:1px solid var(--line)}
-.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--orange)}
-details summary{cursor:pointer}details[open] summary{margin-bottom:4px}
+.warn{color:var(--orange)}details summary{cursor:pointer}details[open] summary{margin-bottom:4px}
 .lbl{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin-top:8px}
-.err{border-color:var(--bad)}
-.pump{font-size:.95rem;color:var(--mute)}
-a{color:var(--orange)}
-.lock{text-align:center;font-size:1.15rem;font-weight:700;border-color:var(--orange)}
+.err{border-color:var(--bad)}.pump{font-size:.95rem;color:var(--mute)}
+.need{margin:8px 0;font-size:.92rem;color:var(--mute)}
+.pts{color:var(--orange);font-weight:800}
 </style></head>
 <body><main>
-<h1>Java <span>Autograder</span></h1>
-<p class="sub">Halloween Pair Challenge &mdash; upload your <code>.java</code> file and see how many tests pass. You can submit as many times as you like. <a href="board.html" target="_blank">Leaderboard</a></p>
-<div class="card lock" id="lock" hidden></div>
+<div class="top"><h1>Halloween <span>Pair Challenge</span></h1><div><span id="chip" class="chip waiting">...</span> <span id="timer" class="timer"></span></div></div>
 
-<div class="card">
-  <div class="row"><label for="who">Your name(s)</label><input id="who" type="text" placeholder="e.g. Kostia &amp; Matthew" autocomplete="off"></div>
-  <div class="row"><label for="prog">Program</label><select id="prog"></select>
-    <div class="need" id="need"></div></div>
-  <div class="row"><label>Your file</label>
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a .java file"><div id="dropmsg"><b>Click to choose</b> or drag your .java file here</div></div>
-    <input id="file" type="file" accept=".java" hidden></div>
-  <button id="go" disabled>Run tests</button>
-</div>
-<div id="out" aria-live="polite"></div>
+<section id="s-name" class="card" hidden>
+  <h2>Who are you?</h2>
+  <p class="none" style="margin-top:0">One name per person. Your partner enters their own name on their own laptop, then you join up in the lobby.</p>
+  <div class="row"><input id="who" type="text" maxlength="40" placeholder="First name and last initial, e.g. Kostia P." autocomplete="off"><button class="go" id="join">Enter the lobby</button></div>
+  <p id="joinerr" class="bad" style="margin:8px 0 0"></p>
+</section>
+
+<section id="s-lobby" hidden>
+  <div class="card lock">Waiting for Mr. Taylor to press Start...</div>
+  <div class="card" id="myteam"></div>
+  <div class="card"><div class="lobbyhead"><h2>Teams</h2><span class="none" id="readycount"></span></div>
+    <p class="none" style="margin:0 0 4px">Teams are 2 people max. Click <b>Join</b> on someone who is alone, or stay solo. Press <b>Ready</b> when your team is final; Ready locks you in.</p>
+    <div class="teams" id="teams"></div></div>
+</section>
+
+<section id="s-play" hidden>
+  <div class="card lock" id="lock" hidden></div>
+  <div class="card scorebar" id="scorebar"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panel"></div>
+</section>
 </main>
 <script src="config.js"></script>
 <script>
-const API=(window.API_URL||"").replace(/\/$/,"");
-const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-let programs=[],code=null,fname="",open=false;
+const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const mmss=ms=>{const t=Math.max(0,Math.floor(ms/1000));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+let pid=null;try{pid=localStorage.getItem("pid")}catch(e){}
+let programs=[],M=null,offset=0,cur=null,busy=false;const U={};   // U[programId] = {code,fname,result,sig}
+const post=async(p,b)=>{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return{s:r.status,d:await r.json().catch(()=>({}))}};
+const setPid=v=>{pid=v;try{v?localStorage.setItem("pid",v):localStorage.removeItem("pid")}catch(e){}};
+function screen(n){for(const s of["s-name","s-lobby","s-play"])$(s).hidden=s!==n}
+fetch(API+"/api/programs").then(r=>r.json()).then(p=>{programs=p;if(!cur)cur=p[0].id;render()}).catch(()=>{$("joinerr").textContent="Could not reach the grader. Tell Mr. Taylor."});
 try{$("who").value=localStorage.getItem("who")||""}catch(e){}
-fetch(API+"/api/programs").then(r=>r.json()).then(p=>{programs=p;$("prog").innerHTML=p.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join("");need()}).catch(()=>{$("out").innerHTML='<div class="card err">Could not reach the grader. Tell Mr. Taylor.</div>'});
-function cur(){return programs.find(p=>p.id===$("prog").value)}
-function need(){const p=cur();if(p)$("need").innerHTML=`File name: <code>${p.cls}.java</code> &middot; required header: <code>${esc(p.header)}</code>`}
-$("prog").onchange=()=>{need();$("out").innerHTML=""};
-function ready(){$("go").disabled=!(open&&code!==null&&cur())}
-async function poll(){try{const s=(await (await fetch(API+"/api/status")).json()).state;open=s==="open";const l=$("lock");l.hidden=open;l.textContent=s==="waiting"?"Waiting for Mr. Taylor to press Start...":"Submissions are closed.";ready()}catch(e){}}
-poll();setInterval(poll,2500);
-function load(f){if(!f)return;if(!/\.java$/i.test(f.name)){$("dropmsg").innerHTML='<span class="bad">That is not a .java file.</span>';code=null;ready();return}
-  const r=new FileReader();r.onload=()=>{code=r.result;fname=f.name;$("dropmsg").innerHTML=`<b>${esc(f.name)}</b> ready &mdash; click to choose a different file`;ready()};r.readAsText(f)}
-$("drop").onclick=()=>$("file").click();
-$("drop").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("file").click()}};
-$("file").onchange=e=>load(e.target.files[0]);
-["dragover","dragenter"].forEach(t=>$("drop").addEventListener(t,e=>{e.preventDefault();$("drop").classList.add("over")}));
-["dragleave","drop"].forEach(t=>$("drop").addEventListener(t,e=>{e.preventDefault();$("drop").classList.remove("over")}));
-$("drop").addEventListener("drop",e=>load(e.dataTransfer.files[0]));
-$("go").onclick=async()=>{
-  const who=$("who").value.trim();
-  if(!who){$("who").focus();$("out").innerHTML='<div class="card err">Type your name(s) first.</div>';return}
-  try{localStorage.setItem("who",who)}catch(e){}
-  $("go").disabled=true;$("go").textContent="Running tests...";$("out").innerHTML='<div class="card pump">Compiling and running your program...</div>';
-  try{
-    const r=await fetch(API+"/api/grade",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({student:who,program:$("prog").value,code})});
-    const d=await r.json();if(r.status===423){open=false;poll();$("out").innerHTML="";}else show(d);
-  }catch(e){$("out").innerHTML='<div class="card err">Could not reach the grader. Try again.</div>'}
-  $("go").textContent="Run tests";ready();
-};
-function checks(c){return (c||[]).map(x=>`<li class="${x.ok?"ok":x.soft?"warn":"bad"}">${x.ok?"&#10003;":x.soft?"&#9888;":"&#10007;"} ${esc(x.msg)}</li>`).join("")}
-function show(d){
-  let h="";
-  if(d.error){h+=`<div class="card err"><b class="bad">${esc(d.error)}</b>${d.detail?`<pre>${esc(d.detail)}</pre>`:""}<ul>${checks(d.checks)}</ul></div>`}
-  else{
-    const pct=Math.round(100*d.passed/d.total);
-    h+=`<div class="card"><div class="score">${d.passed}<small> / ${d.total} tests passed</small></div><div class="bar"><i style="width:${pct}%"></i></div>${d.passed===d.total?'<b class="ok">All tests pass &mdash; nice work! Show your teacher.</b>':'<span class="pump">Fix the failing tests and submit again. Hidden tests only show pass or fail.</span>'}<ul style="margin-top:10px">${checks(d.checks)}</ul></div><div class="card"><ul style="margin:-9px 0">`;
-    for(const t of d.results){
-      const mark=t.pass?'<span class="ok">&#10003;</span>':'<span class="bad">&#10007;</span>';
-      if(t.hidden||t.pass&&!t.note){h+=`<li>${mark} ${esc(t.name)}${t.hidden?" (hidden)":""}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</li>`;continue}
-      h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary>
-        <div class="lbl">Input typed</div><pre>${esc(t.input.join("\n"))}</pre>
-        <div class="lbl">Expected output</div><pre>${esc(t.expected)}</pre>
-        <div class="lbl">Your output</div><pre>${esc(t.actual)||"(nothing)"}</pre></details></li>`}
-    h+="</ul></div>"}
-  $("out").innerHTML=h;$("out").scrollIntoView({behavior:"smooth",block:"nearest"});
-}
+$("join").onclick=join;$("who").onkeydown=e=>{if(e.key==="Enter")join()};
+async function join(){const name=$("who").value.trim();if(name.length<2){$("joinerr").textContent="Type your name first.";return}
+  $("join").disabled=true;try{const r=await post("/api/join",{name});if(r.s===200){setPid(r.d.me.id);try{localStorage.setItem("who",name)}catch(e){}$("joinerr").textContent="";M=r.d;render()}else $("joinerr").textContent=r.d.error||"Could not join."}catch(e){$("joinerr").textContent="Could not reach the grader. Try again."}$("join").disabled=false}
+async function poll(){if(!pid){screen("s-name");return}
+  try{const r=await fetch(API+"/api/me?id="+encodeURIComponent(pid));if(r.status===404){setPid(null);M=null;screen("s-name");return}if(!r.ok)return;M=await r.json();offset=M.now-Date.now();render()}catch(e){}}
+poll();setInterval(poll,2000);setInterval(tick,1000);
+setInterval(async()=>{if(pid||!$("s-name")||$("s-name").hidden)return;try{const s=(await (await fetch(API+"/api/status")).json()).state;$("chip").className="chip "+s;$("chip").textContent=label[s]}catch(e){}},2500);
+function tick(){if(!M)return;$("timer").textContent=M.startedAt?mmss(Date.now()+offset-M.startedAt):""}
+const label={waiting:"Waiting to start",open:"LIVE",closed:"Closed"};
+function render(){if(!M||!programs.length){if(!pid)screen("s-name");return}
+  $("chip").className="chip "+M.state;$("chip").textContent=label[M.state];tick();
+  if(M.state==="waiting"){screen("s-lobby");lobby()}else{screen("s-play");play()}}
+let lobbySig="";
+function lobby(){const me=M.me,t=M.team;const sig=JSON.stringify([me,t.id,t.members,M.lobby]);if(sig===lobbySig)return;lobbySig=sig;
+  $("myteam").innerHTML=`<div class="lobbyhead"><h2>Your team${t.members.length===1?" (solo so far)":""}</h2>${me.ready?'<span class="badge ready">READY</span>':""}</div>`+
+    t.members.map(m=>`<div class="who">${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}</div>`).join("")+
+    `<div class="row" style="margin-top:10px">${me.ready?'<button class="ghost" id="unready">Not ready</button>':'<button class="go" id="ready">Ready</button>'}${t.members.length>1&&!me.ready?'<button class="ghost" id="leave">Leave team</button>':""}</div>`+
+    (me.ready?'<p class="none" style="margin:10px 0 0">You are locked in. Mr. Taylor starts when every team is ready.</p>':"");
+  if($("ready"))$("ready").onclick=()=>act("/api/ready",{ready:true});if($("unready"))$("unready").onclick=()=>act("/api/ready",{ready:false});if($("leave"))$("leave").onclick=()=>act("/api/team",{action:"leave"});
+  const others=M.lobby.teams.filter(x=>x.id!==t.id);
+  $("readycount").textContent=`${M.lobby.readyTeams} of ${M.lobby.totalTeams} teams ready`;
+  $("teams").innerHTML=others.length?others.map(x=>{const canJoin=!me.ready&&x.members.length===1&&!x.members[0].ready;
+    return `<div class="team${x.ready?" ready":""}">${x.members.map(m=>`<div class="who">${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}</div>`).join("")}${x.members.length===1?(canJoin?`<button class="join" data-t="${x.id}">Join</button>`:'<div class="none" style="font-size:.85rem;margin-top:6px">'+(x.members[0].ready?"going solo":"")+'</div>'):'<div class="none" style="font-size:.85rem;margin-top:6px">full</div>'}</div>`}).join(""):'<div class="empty">Nobody else is here yet.</div>';
+  for(const b of document.querySelectorAll("button.join"))b.onclick=()=>act("/api/team",{action:"join",team:b.dataset.t})}
+async function act(p,b){try{const r=await post(p,{id:pid,...b});if(r.s===200){M=r.d;render()}else if(r.s===404){setPid(null);screen("s-name")}else alert(r.d.error||"Could not do that.")}catch(e){}}
+let playSig="";
+function play(){const t=M.team;
+  const l=$("lock");l.hidden=M.state==="open";l.textContent="Submissions are closed.";
+  const sig=JSON.stringify([t.name,t.points,t.rank,t.of,t.solved,t.cells,M.state,cur]);if(sig!==playSig){playSig=sig;
+  $("scorebar").innerHTML=`<div><span class="none">Team</span><br><b>${esc(t.name)}</b></div><div><span class="none">Points</span><br><b class="pts">${t.points}</b></div><div><span class="none">Rank</span><br><b>#${t.rank}</b> <span class="none">of ${t.of}</span></div><div><span class="none">Solved</span><br><b>${t.solved}</b> <span class="none">of ${programs.length}</span></div><div style="margin-left:auto"><a href="board.html" target="_blank">Leaderboard</a></div>`;
+  $("tabs").innerHTML=programs.map(p=>{const c=t.cells[p.id];const st=!c?"not tried":c.solvedAt!==null?`&#10003; solved &middot; ${c.points} pts`:`best ${c.best}/${c.total} &middot; ${c.points} pts`;
+    return `<button class="tab${p.id===cur?" cur":""}${c&&c.solvedAt!==null?" done":""}" data-p="${p.id}">${esc(p.title.replace(/ — /," · "))}<span class="st">${st}</span></button>`}).join("");
+  for(const b of document.querySelectorAll(".tab"))b.onclick=()=>{cur=b.dataset.p;play()};}
+  panel(false)}
+function panel(force){const p=programs.find(x=>x.id===cur);if(!p)return;const c=M.team.cells[p.id];const u=U[p.id]||(U[p.id]={});
+  const sig=JSON.stringify([cur,c&&c.solvedAt,c&&c.best,c&&c.attempts,M.state]);if(!force&&u.sig===sig&&$("panel").dataset.p===cur)return;u.sig=sig;$("panel").dataset.p=cur;
+  const solved=c&&c.solvedAt!==null,open=M.state==="open";
+  let h=`<div class="card"><h2>${esc(p.title)}</h2><pre>${esc(p.prompt||"")}</pre><div class="need">File name: <code>${p.cls}.java</code> &middot; required header: <code>${esc(p.header)}</code></div>
+    <details><summary>Sample runs (${p.samples.length})</summary>${p.samples.map(s=>`<div class="lbl">Input typed</div><pre>${esc(s.input.join("\n"))}</pre><div class="lbl">Expected output</div><pre>${esc(s.expected)}</pre>`).join("")}</details></div>`;
+  if(solved)h+=`<div class="card"><div class="score">&#10003; Solved<small> &middot; ${c.points} points${c.attempts>1?" &middot; "+c.attempts+" attempts":""}</small></div><span class="pump">Nice work! Pick another program.</span></div>`;
+  else h+=`<div class="card"><div class="drop" id="drop" tabindex="0" role="button"><div id="dropmsg">${u.fname?`<b>${esc(u.fname)}</b> ready &mdash; click to choose a different file`:`<b>Click to choose</b> or drag your <code>${p.cls}.java</code> here`}</div></div><input id="file" type="file" accept=".java" hidden><button class="run" id="go" ${open&&u.code?"":"disabled"}>${open?"Run tests":"Submissions are closed"}</button>${c?`<p class="pump" style="margin:10px 0 0">Best so far: ${c.best}/${c.total} tests &middot; ${c.attempts} attempt${c.attempts===1?"":"s"} &middot; <span class="pts">${c.points} pts</span></p>`:""}</div>`;
+  h+=`<div id="out" aria-live="polite">${u.result||""}</div>`;
+  $("panel").innerHTML=h;if(solved)return;
+  const load=f=>{if(!f)return;if(!/\.java$/i.test(f.name)){$("dropmsg").innerHTML='<span class="bad">That is not a .java file.</span>';u.code=null;$("go").disabled=true;return}
+    const r=new FileReader();r.onload=()=>{u.code=r.result;u.fname=f.name;$("dropmsg").innerHTML=`<b>${esc(f.name)}</b> ready &mdash; click to choose a different file`;$("go").disabled=!(open&&u.code)};r.readAsText(f)};
+  $("drop").onclick=()=>$("file").click();$("drop").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("file").click()}};$("file").onchange=e=>load(e.target.files[0]);
+  ["dragover","dragenter"].forEach(t=>$("drop").addEventListener(t,e=>{e.preventDefault();$("drop").classList.add("over")}));
+  ["dragleave","drop"].forEach(t=>$("drop").addEventListener(t,e=>{e.preventDefault();$("drop").classList.remove("over")}));
+  $("drop").addEventListener("drop",e=>load(e.dataTransfer.files[0]));
+  $("go").onclick=()=>submit(p,u)}
+async function submit(p,u){if(busy||!u.code)return;busy=true;$("go").disabled=true;$("go").textContent="Running tests...";$("out").innerHTML='<div class="card pump">Compiling and running your program...</div>';
+  try{const r=await post("/api/grade",{id:pid,program:p.id,code:u.code});
+    if(r.s===423){u.result="";await poll()}else if(r.s===404&&r.d.rejoin){setPid(null);screen("s-name")}else if(r.s===409){u.result=`<div class="card"><b class="ok">${esc(r.d.error)}</b></div>`;await poll()}
+    else{u.result=show(r.d);await poll()}
+  }catch(e){u.result='<div class="card err">Could not reach the grader. Try again.</div>'}
+  busy=false;panel(true);const o=$("out");if(o)o.scrollIntoView({behavior:"smooth",block:"nearest"})}
+const checks=c=>(c||[]).map(x=>`<li class="${x.ok?"ok":x.soft?"warn":"bad"}">${x.ok?"&#10003;":x.soft?"&#9888;":"&#10007;"} ${esc(x.msg)}</li>`).join("");
+function show(d){let h="";
+  if(d.error)return`<div class="card err"><b class="bad">${esc(d.error)}</b>${d.detail?`<pre>${esc(d.detail)}</pre>`:""}<ul>${checks(d.checks)}</ul>${d.score?"":'<p class="pump" style="margin:8px 0 0">This upload did not count as an attempt.</p>'}</div>`;
+  const pct=Math.round(100*d.passed/d.total),sc=d.score;
+  h+=`<div class="card"><div class="score">${d.passed}<small> / ${d.total} tests passed</small>${sc?` <small>&middot; <span class="pts">${sc.points} pts</span> for this program (attempt ${sc.attempts})</small>`:""}</div><div class="bar"><i style="width:${pct}%"></i></div>${d.passed===d.total?'<b class="ok">All tests pass &mdash; nice work! Pick another program.</b>':'<span class="pump">Fix the failing tests and upload again. Hidden tests only show pass or fail. Each extra compiled attempt costs a few points, so test with the sample runs first.</span>'}<ul style="margin-top:10px">${checks(d.checks)}</ul></div><div class="card"><ul style="margin:-9px 0">`;
+  for(const t of d.results){const mark=t.pass?'<span class="ok">&#10003;</span>':'<span class="bad">&#10007;</span>';
+    if(t.hidden||t.pass&&!t.note){h+=`<li>${mark} ${esc(t.name)}${t.hidden?" (hidden)":""}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</li>`;continue}
+    h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary><div class="lbl">Input typed</div><pre>${esc(t.input.join("\n"))}</pre><div class="lbl">Expected output</div><pre>${esc(t.expected)}</pre><div class="lbl">Your output</div><pre>${esc(t.actual)||"(nothing)"}</pre></details></li>`}
+  return h+"</ul></div>"}
 </script></body></html>
