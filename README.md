@@ -30,7 +30,7 @@ Per program, per team:
 - `public/` — the student page (`index.html`: name → lobby → challenge), projector board (`board.html`), teacher controls (`teacher.html`), `config.js`.
 - `Dockerfile`, `render.yaml` — Node 22 + JDK 17, runs as a non-root user; Render Blueprint for one-click setup.
 - `smoke_test.js` — `node smoke_test.js https://YOUR-APP.onrender.com YOUR_KEY` joins as a test student, starts a round, uploads the 5 reference solutions, checks the board, then resets everything.
-- `programs_def.js`, `make_tests.js`, `reference/` — your source of truth. Edit the inputs or the student-facing `prompt` text in `programs_def.js` (or a reference solution), then run `node make_tests.js` (needs a JDK) to rebuild `tests.json`.
+- `programs_def.js`, `make_tests.js`, `reference/` — your source of truth. Edit the inputs or the student-facing `prompt` (story, what to read, the method and its return values, what to print) in `programs_def.js` (or a reference solution), then run `node make_tests.js` (needs a JDK) to rebuild `tests.json`.
 
 ## Easiest deploy: one service on Render (page + grader together)
 1. Put this folder in a GitHub repo (it is already a git repo with one commit: create an empty repo on GitHub, then

@@ -1,105 +1,60 @@
 // Source of truth for the 5 prompts. `node make_tests.js` runs reference/*.java on every input to produce tests.json.
-// `prompt` is what students see on the challenge screen. Keep the quoted prompt/output strings exactly as the reference prints them.
+// `prompt` is what students see on the challenge screen: story, what to read (prompt text + type), the method (header, what it
+// returns, the cases), and what to print. Keep prompt text and output strings exactly as the reference prints them.
 module.exports = [
   { id: "candycheck", title: "Program 1 — CandyCheck", cls: "CandyCheck",
     header: "public static String rating(int pieces)",
-    prompt: `Halloween night is over and it's time to judge the haul. Write a program that asks the trick-or-treater for their name and how many pieces of candy they collected, then prints a one-line verdict.
-
-Your program must read exactly two inputs, in this order, with these exact prompts (no newline after a prompt):
-  1. Name:                 a String (one word)
-  2. Pieces of candy:      an int
-
-Write this method exactly as shown and call it from main:
-  public static String rating(int pieces)
-
-rating(pieces) returns a String (one of the four messages below) based on how many pieces were collected:
-  50 or more     ->  "Legendary haul!"
-  25 through 49  ->  "Solid haul."
-  10 through 24  ->  "Not bad."
-  fewer than 10  ->  "The neighbors ghosted you."
-Use if / else if / else. Watch the boundaries: exactly 50 is Legendary, exactly 25 is Solid, exactly 10 is Not bad.
-
-Finally print one line in this exact format (name, a space, "collected", the number, "pieces:", then the rating):
-  NAME collected N pieces: RATING
-
-Example run (what the user types is shown in orange in the test cases below):
-  Name: Kostia
-  Pieces of candy: 52
-  Kostia collected 52 pieces: Legendary haul!`,
+    prompt: {
+      story: "Halloween is over and it's time to judge the haul. Your program reads a trick-or-treater's name and how many pieces of candy they collected, then prints a one-line verdict.",
+      reads: [["Name: ", "a String (one word)"], ["Pieces of candy: ", "an int"]],
+      method: { header: "public static String rating(int pieces)", returns: "a String — one of these four messages, based on the number of pieces:",
+        cases: [["50 or more", "Legendary haul!"], ["25 to 49", "Solid haul."], ["10 to 24", "Not bad."], ["fewer than 10", "The neighbors ghosted you."]],
+        note: "Use if / else if / else. Check the boundaries: exactly 50 is Legendary, exactly 25 is Solid, exactly 10 is Not bad." },
+      prints: [["One line:", "the name, a space, the word collected, the number, the word pieces: and then the rating. For example: Kostia collected 52 pieces: Legendary haul!"]] },
     samples: [["Kostia","52"],["Amiyah","30"],["Lior","12"],["Matthew","4"]],
     hidden:  [["Sika","50"],["Conrad","25"],["Angel","10"],["Travis","9"],["Nikolay","0"],["Austin","100"]] },
   { id: "hauntedDoor", title: "Program 2 — HauntedDoor", cls: "HauntedDoor",
     header: "public static boolean canEnter(int age, boolean withAdult, boolean scared)",
-    prompt: `Decide whether someone may enter the haunted house.
-
-Prompts (print exactly):
-  Name: 
-  Age: 
-  With an adult (true/false): 
-  Scared (true/false): 
-
-Write canEnter(age, withAdult, scared), which returns a boolean:
-  true   if the person is 12 or older OR with an adult, AND is not scared
-  false  otherwise (anyone who is scared gets false, no matter their age)
-
-Then print one line:
-  NAME, the door creaks open...       (if they can enter)
-  NAME, the ghost blocks your way.    (otherwise)`,
+    prompt: {
+      story: "The haunted house has a bouncer. Your program reads a visitor's name, age, whether they are with an adult, and whether they are scared, then decides if they may enter.",
+      reads: [["Name: ", "a String (one word)"], ["Age: ", "an int"], ["With an adult (true/false): ", "a boolean"], ["Scared (true/false): ", "a boolean"]],
+      method: { header: "public static boolean canEnter(int age, boolean withAdult, boolean scared)", returns: "a boolean:",
+        cases: [["true", "if the visitor is 12 or older OR is with an adult, AND is not scared"], ["false", "otherwise — anyone who is scared gets false, no matter their age"]],
+        note: "Think about which test has to win: being scared beats everything else." },
+      prints: [["One line:", "the name, then a comma and a space, then the message."], ["If canEnter is true:", "NAME, the door creaks open..."], ["If canEnter is false:", "NAME, the ghost blocks your way."]] },
     samples: [["Kostia","14","false","false"],["Lior","9","true","false"],["Amiyah","9","false","false"],["Matthew","15","false","true"]],
     hidden:  [["Sika","12","false","false"],["Travis","11","false","false"],["Angel","11","true","true"],["Hassan","12","true","true"],["Nikolay","30","true","false"],["Conrad","5","false","false"]] },
   { id: "pumpkin", title: "Program 3 — Pumpkin", cls: "Pumpkin",
     header: "public static String verdict(double lbs, boolean rotten)",
-    prompt: `Judge a pumpkin by its weight and whether it is rotten.
-
-Prompts (print exactly):
-  Weight in pounds: 
-  Rotten (true/false): 
-
-Write verdict(lbs, rotten), which returns a String (one of these four messages):
-  under 10 lbs            ->  "Too small to carve."
-  10 lbs or more, rotten  ->  "Compost it."
-  50 lbs or more          ->  "Prize pumpkin!"
-  otherwise               ->  "Great for carving."
-
-Then print one line:  Verdict: VERDICT`,
+    prompt: {
+      story: "Judge a pumpkin for the carving contest. Your program reads the pumpkin's weight and whether it is rotten, then prints a verdict.",
+      reads: [["Weight in pounds: ", "a double"], ["Rotten (true/false): ", "a boolean"]],
+      method: { header: "public static String verdict(double lbs, boolean rotten)", returns: "a String — one of these four messages:",
+        cases: [["under 10 pounds", "Too small to carve."], ["10 pounds or more, and rotten", "Compost it."], ["50 pounds or more, not rotten", "Prize pumpkin!"], ["otherwise", "Great for carving."]],
+        note: "Check the size first, then rotten, then prize. Exactly 10 pounds is big enough to carve; exactly 50 is a prize pumpkin." },
+      prints: [["One line:", "the word Verdict: followed by a space and the message. For example: Verdict: Prize pumpkin!"]] },
     samples: [["60","false"],["25.5","false"],["30","true"],["6.5","false"]],
     hidden:  [["50","false"],["10","false"],["9.9","true"],["100","true"],["49.9","false"],["10","true"]] },
   { id: "cursedWord", title: "Program 4 — CursedWord", cls: "CursedWord",
     header: "public static boolean isCursed(String word)",
-    prompt: `Check whether a word is cursed.
-
-Prompt (print exactly):
-  Enter a word: 
-
-Write isCursed(word), which returns a boolean:
-  true   if the word contains the letter z, OR if it is 8 or more letters long AND contains the letter o
-  false  otherwise
-
-Then print two lines:
-  Length: N
-  WORD is CURSED!     (if cursed)
-  WORD is safe.       (otherwise)`,
+    prompt: {
+      story: "Some words carry a curse. Your program reads one word, prints how long it is, and says whether it is cursed.",
+      reads: [["Enter a word: ", "a String (one word, all lowercase)"]],
+      method: { header: "public static boolean isCursed(String word)", returns: "a boolean:",
+        cases: [["true", "if the word contains the letter z, OR if it is 8 or more letters long AND contains the letter o"], ["false", "otherwise"]],
+        note: "indexOf and length() are all you need. Watch the AND: a long word without an o is safe unless it has a z." },
+      prints: [["Line 1:", "the word Length: followed by a space and the number of letters, for example Length: 6"], ["Line 2, if isCursed is true:", "WORD is CURSED!"], ["Line 2, if isCursed is false:", "WORD is safe."]] },
     samples: [["zombie"],["skeleton"],["pumpkins"],["ghost"]],
     hidden:  [["zzz"],["witchcraft"],["banshee"],["trickster"],["z"],["hollow"],["ooooooooo"],["frankenstein"]] },
   { id: "zombieEscape", title: "Program 5 — ZombieEscape", cls: "ZombieEscape",
     header: "public static String outcome(int speed, int stamina, boolean weapon)",
-    prompt: `A zombie attacks! Decide what happens.
-
-Prompts (print exactly):
-  Name: 
-  Speed: 
-  Stamina: 
-  Has a weapon (true/false): 
-
-Write outcome(speed, stamina, weapon), which returns a String (one of these four messages):
-  with a weapon:    stamina 20 or more  ->  "You swing and win!"
-                    otherwise           ->  "Too tired to swing. The zombie got you!"
-  without a weapon: speed 15 or more AND stamina 10 or more  ->  "You outrun the zombie!"
-                    otherwise                                 ->  "The zombie got you!"
-
-Then print two lines:
-  NAME faces a zombie!
-  OUTCOME`,
+    prompt: {
+      story: "A zombie attacks! Your program reads a survivor's name, speed, stamina, and whether they have a weapon, then prints what happens.",
+      reads: [["Name: ", "a String (one word)"], ["Speed: ", "an int"], ["Stamina: ", "an int"], ["Has a weapon (true/false): ", "a boolean"]],
+      method: { header: "public static String outcome(int speed, int stamina, boolean weapon)", returns: "a String — one of these four messages:",
+        cases: [["weapon, and stamina 20 or more", "You swing and win!"], ["weapon, but stamina under 20", "Too tired to swing. The zombie got you!"], ["no weapon, speed 15 or more AND stamina 10 or more", "You outrun the zombie!"], ["no weapon, otherwise", "The zombie got you!"]],
+        note: "Decide about the weapon first, then check the numbers. Exactly 20 stamina is enough to swing; exactly 15 speed and exactly 10 stamina are enough to run." },
+      prints: [["Line 1:", "the name followed by faces a zombie!  For example: Kostia faces a zombie!"], ["Line 2:", "the outcome message."]] },
     samples: [["Kostia","10","25","true"],["Lior","20","15","true"],["Matthew","18","12","false"],["Amiyah","14","40","false"]],
     hidden:  [["Sika","15","10","false"],["Travis","15","9","false"],["Angel","5","19","true"],["Conrad","14","50","false"],["Hassan","0","20","true"],["Nikolay","15","10","true"]] }
 ];
