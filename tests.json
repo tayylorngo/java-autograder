@@ -4,7 +4,7 @@
   "title": "Program 1 — CandyCheck",
   "cls": "CandyCheck",
   "header": "public static String rating(int pieces)",
-  "prompt": "Halloween night is over and it's time to judge the haul. Write a program that asks the trick-or-treater for their name and how many pieces of candy they collected, then prints a one-line verdict.\n\nYour program must read exactly two inputs, in this order, with these exact prompts (no newline after a prompt):\n  1. Name:                 a String (one word)\n  2. Pieces of candy:      an int\n\nWrite this method exactly as shown and call it from main:\n  public static String rating(int pieces)\n\nrating returns a String based on how many pieces were collected:\n  50 or more     ->  \"Legendary haul!\"\n  25 through 49  ->  \"Solid haul.\"\n  10 through 24  ->  \"Not bad.\"\n  fewer than 10  ->  \"The neighbors ghosted you.\"\nUse if / else if / else. Watch the boundaries: exactly 50 is Legendary, exactly 25 is Solid, exactly 10 is Not bad.\n\nFinally print one line in this exact format (name, a space, \"collected\", the number, \"pieces:\", then the rating):\n  NAME collected N pieces: RATING\n\nExample run (what the user types is shown in orange in the test cases below):\n  Name: Kostia\n  Pieces of candy: 52\n  Kostia collected 52 pieces: Legendary haul!",
+  "prompt": "Halloween night is over and it's time to judge the haul. Write a program that asks the trick-or-treater for their name and how many pieces of candy they collected, then prints a one-line verdict.\n\nYour program must read exactly two inputs, in this order, with these exact prompts (no newline after a prompt):\n  1. Name:                 a String (one word)\n  2. Pieces of candy:      an int\n\nWrite this method exactly as shown and call it from main:\n  public static String rating(int pieces)\n\nrating(pieces) returns a String (one of the four messages below) based on how many pieces were collected:\n  50 or more     ->  \"Legendary haul!\"\n  25 through 49  ->  \"Solid haul.\"\n  10 through 24  ->  \"Not bad.\"\n  fewer than 10  ->  \"The neighbors ghosted you.\"\nUse if / else if / else. Watch the boundaries: exactly 50 is Legendary, exactly 25 is Solid, exactly 10 is Not bad.\n\nFinally print one line in this exact format (name, a space, \"collected\", the number, \"pieces:\", then the rating):\n  NAME collected N pieces: RATING\n\nExample run (what the user types is shown in orange in the test cases below):\n  Name: Kostia\n  Pieces of candy: 52\n  Kostia collected 52 pieces: Legendary haul!",
   "tests": [
    {
     "name": "Sample run 1",
@@ -233,7 +233,7 @@
   "title": "Program 2 — HauntedDoor",
   "cls": "HauntedDoor",
   "header": "public static boolean canEnter(int age, boolean withAdult, boolean scared)",
-  "prompt": "Decide whether someone may enter the haunted house.\n\nPrompts (print exactly):\n  Name: \n  Age: \n  With an adult (true/false): \n  Scared (true/false): \n\nWrite canEnter(age, withAdult, scared): you may enter if you are 12 or older OR with an adult, but never if you are scared.\n\nThen print one line:\n  NAME, the door creaks open...       (if they can enter)\n  NAME, the ghost blocks your way.    (otherwise)",
+  "prompt": "Decide whether someone may enter the haunted house.\n\nPrompts (print exactly):\n  Name: \n  Age: \n  With an adult (true/false): \n  Scared (true/false): \n\nWrite canEnter(age, withAdult, scared), which returns a boolean:\n  true   if the person is 12 or older OR with an adult, AND is not scared\n  false  otherwise (anyone who is scared gets false, no matter their age)\n\nThen print one line:\n  NAME, the door creaks open...       (if they can enter)\n  NAME, the ghost blocks your way.    (otherwise)",
   "tests": [
    {
     "name": "Sample run 1",
@@ -562,7 +562,7 @@
   "title": "Program 3 — Pumpkin",
   "cls": "Pumpkin",
   "header": "public static String verdict(double lbs, boolean rotten)",
-  "prompt": "Judge a pumpkin by its weight and whether it is rotten.\n\nPrompts (print exactly):\n  Weight in pounds: \n  Rotten (true/false): \n\nWrite verdict(lbs, rotten):\n  under 10 lbs            ->  \"Too small to carve.\"\n  10 lbs or more, rotten  ->  \"Compost it.\"\n  50 lbs or more          ->  \"Prize pumpkin!\"\n  otherwise               ->  \"Great for carving.\"\n\nThen print one line:  Verdict: VERDICT",
+  "prompt": "Judge a pumpkin by its weight and whether it is rotten.\n\nPrompts (print exactly):\n  Weight in pounds: \n  Rotten (true/false): \n\nWrite verdict(lbs, rotten), which returns a String (one of these four messages):\n  under 10 lbs            ->  \"Too small to carve.\"\n  10 lbs or more, rotten  ->  \"Compost it.\"\n  50 lbs or more          ->  \"Prize pumpkin!\"\n  otherwise               ->  \"Great for carving.\"\n\nThen print one line:  Verdict: VERDICT",
   "tests": [
    {
     "name": "Sample run 1",
@@ -791,7 +791,7 @@
   "title": "Program 4 — CursedWord",
   "cls": "CursedWord",
   "header": "public static boolean isCursed(String word)",
-  "prompt": "Check whether a word is cursed.\n\nPrompt (print exactly):\n  Enter a word: \n\nWrite isCursed(word): a word is cursed if it contains the letter z, or if it is 8 or more letters long AND contains the letter o.\n\nThen print two lines:\n  Length: N\n  WORD is CURSED!     (if cursed)\n  WORD is safe.       (otherwise)",
+  "prompt": "Check whether a word is cursed.\n\nPrompt (print exactly):\n  Enter a word: \n\nWrite isCursed(word), which returns a boolean:\n  true   if the word contains the letter z, OR if it is 8 or more letters long AND contains the letter o\n  false  otherwise\n\nThen print two lines:\n  Length: N\n  WORD is CURSED!     (if cursed)\n  WORD is safe.       (otherwise)",
   "tests": [
    {
     "name": "Sample run 1",
@@ -1004,7 +1004,7 @@
   "title": "Program 5 — ZombieEscape",
   "cls": "ZombieEscape",
   "header": "public static String outcome(int speed, int stamina, boolean weapon)",
-  "prompt": "A zombie attacks! Decide what happens.\n\nPrompts (print exactly):\n  Name: \n  Speed: \n  Stamina: \n  Has a weapon (true/false): \n\nWrite outcome(speed, stamina, weapon):\n  with a weapon:    stamina 20 or more  ->  \"You swing and win!\"\n                    otherwise           ->  \"Too tired to swing. The zombie got you!\"\n  without a weapon: speed 15 or more AND stamina 10 or more  ->  \"You outrun the zombie!\"\n                    otherwise                                 ->  \"The zombie got you!\"\n\nThen print two lines:\n  NAME faces a zombie!\n  OUTCOME",
+  "prompt": "A zombie attacks! Decide what happens.\n\nPrompts (print exactly):\n  Name: \n  Speed: \n  Stamina: \n  Has a weapon (true/false): \n\nWrite outcome(speed, stamina, weapon), which returns a String (one of these four messages):\n  with a weapon:    stamina 20 or more  ->  \"You swing and win!\"\n                    otherwise           ->  \"Too tired to swing. The zombie got you!\"\n  without a weapon: speed 15 or more AND stamina 10 or more  ->  \"You outrun the zombie!\"\n                    otherwise                                 ->  \"The zombie got you!\"\n\nThen print two lines:\n  NAME faces a zombie!\n  OUTCOME",
   "tests": [
    {
     "name": "Sample run 1",

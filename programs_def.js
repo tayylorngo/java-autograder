@@ -12,7 +12,7 @@ Your program must read exactly two inputs, in this order, with these exact promp
 Write this method exactly as shown and call it from main:
   public static String rating(int pieces)
 
-rating returns a String based on how many pieces were collected:
+rating(pieces) returns a String (one of the four messages below) based on how many pieces were collected:
   50 or more     ->  "Legendary haul!"
   25 through 49  ->  "Solid haul."
   10 through 24  ->  "Not bad."
@@ -38,7 +38,9 @@ Prompts (print exactly):
   With an adult (true/false): 
   Scared (true/false): 
 
-Write canEnter(age, withAdult, scared): you may enter if you are 12 or older OR with an adult, but never if you are scared.
+Write canEnter(age, withAdult, scared), which returns a boolean:
+  true   if the person is 12 or older OR with an adult, AND is not scared
+  false  otherwise (anyone who is scared gets false, no matter their age)
 
 Then print one line:
   NAME, the door creaks open...       (if they can enter)
@@ -53,7 +55,7 @@ Prompts (print exactly):
   Weight in pounds: 
   Rotten (true/false): 
 
-Write verdict(lbs, rotten):
+Write verdict(lbs, rotten), which returns a String (one of these four messages):
   under 10 lbs            ->  "Too small to carve."
   10 lbs or more, rotten  ->  "Compost it."
   50 lbs or more          ->  "Prize pumpkin!"
@@ -69,7 +71,9 @@ Then print one line:  Verdict: VERDICT`,
 Prompt (print exactly):
   Enter a word: 
 
-Write isCursed(word): a word is cursed if it contains the letter z, or if it is 8 or more letters long AND contains the letter o.
+Write isCursed(word), which returns a boolean:
+  true   if the word contains the letter z, OR if it is 8 or more letters long AND contains the letter o
+  false  otherwise
 
 Then print two lines:
   Length: N
@@ -87,7 +91,7 @@ Prompts (print exactly):
   Stamina: 
   Has a weapon (true/false): 
 
-Write outcome(speed, stamina, weapon):
+Write outcome(speed, stamina, weapon), which returns a String (one of these four messages):
   with a weapon:    stamina 20 or more  ->  "You swing and win!"
                     otherwise           ->  "Too tired to swing. The zombie got you!"
   without a weapon: speed 15 or more AND stamina 10 or more  ->  "You outrun the zombie!"
