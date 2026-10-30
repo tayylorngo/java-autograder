@@ -8,7 +8,7 @@
 - [ ] `node smoke_test.js https://YOUR-APP.onrender.com YOUR_KEY` prints **ALL GOOD** (it leaves the board reset).
 - [ ] Open `/teacher.html`, type the password, the chip says **Waiting to start** and the lobby is empty. Press **Reset everything** if it isn't.
 - [ ] Render logs show `SELF-TEST OK ... security manager ON`.
-- [ ] Students know the plan: type your name → lobby → team up (2 max) → Ready → code offline → upload per program. The prompts, class names and headers are on their screen after Start.
+- [ ] Students know the plan: type your name → pick a team (Pumpkin, Ghost, Zombie, Alien, Robot, Dragon; 2 per team) → Ready → code offline → upload per program. The prompts, class names and headers are on their screen after Start.
 - [ ] Decide the time limit and set `ROUND_MINUTES` on Render to match (default 40): the speed bonus counts down over that window.
 
 ## 5 minutes before the bell
@@ -18,9 +18,9 @@
 - [ ] Write the URL on the board.
 
 ## Minute 0–5: lobby
-- [ ] Everyone opens the URL and types **their own name** (first name + last initial). Each person lands in the lobby as a solo team.
-- [ ] Pairs: one partner clicks **Join** on the other's card. Teams are 2 max. Anyone can stay solo.
-- [ ] Each student presses **Ready**. Ready locks them in (nobody can join or leave). The projector shows "x of y teams ready".
+- [ ] Everyone opens the URL and types **their own name** (first name + last initial). Each person lands in the lobby with the six team cards.
+- [ ] Pairs pick the same team: both click **Join** on, say, Ghost. Teams hold 2. Anyone can go solo on an empty team.
+- [ ] Each student presses **Ready**. Ready locks them in (nobody can join that team or leave it). The projector shows every team, who is on it, and "x of y teams ready".
 - [ ] Explain: after Start you get 5 tabs, one per program, each with the prompt, the exact class name and header, all test cases, and its own upload. Code in your editor, save as `ClassName.java`, upload. Unlimited uploads, but every compiled upload after the first on a program costs 5 points (max 30), so test against the listed cases first. Solving fast earns a bonus. Partners can split programs; while one of you is uploading program 2, the other can't submit program 2 but can work on anything else.
 - [ ] Wrong teams or a stray name? **Manage teams** on the teacher page moves or removes anyone, before or after Start.
 - [ ] Rule reminder: only `import java.util.Scanner;` — anything else (files, threads, `System.exit`) is rejected with a message and does not count as an attempt.
@@ -42,6 +42,7 @@
   - "Your team already solved this one!" → their partner already got the ✓; pick another tab.
   - "Submissions are closed" banner → you pressed Stop (press Start again; the timer resumes).
   - A student is back at the name screen → you pressed Reset everything, or their browser lost its storage; they type the same name and are back in their team.
+  - A student who arrives late sees the team cards instead of the programs → they pick any team with a free spot and are in.
   - Two students with the same name → the second is asked to add a last initial.
   - "Could not reach the grader" → service asleep or restarting; wait 30 s and retry. Check the Render dashboard.
 - [ ] If the whole class stalls: Render dashboard → Logs. A manual **Restart** takes ~1 min; scores survive if the disk didn't reset, otherwise Start again (board starts empty).

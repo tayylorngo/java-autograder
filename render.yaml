@@ -11,3 +11,5 @@ services:
         sync: false        # Render prompts you for the value; it is never stored in the repo
       - key: ALLOWED_ORIGIN
         value: "*"
+      - key: TEAMS      # name then icon, comma separated; 2 students per team (TEAM_SIZE)
+        value: "Pumpkin 🎃, Ghost 👻, Zombie 🧟, Alien 👽, Robot 🤖, Dragon 🐲"

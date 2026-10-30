@@ -8,11 +8,11 @@
   <div class="row">
     <button class="go" id="start">Start</button><button class="stop" id="stop">Stop</button><button class="ghost" id="lobby">Back to lobby</button><button class="ghost" id="reset">Reset everything</button>
   </div>
-  <p class="none" style="margin:14px 0 0">Students type their name, form teams of 2 in the lobby and press Ready. <b>Start</b> locks teams and opens uploads (the button shows how many teams are ready). <b>Stop</b> pauses uploads; Start again resumes the same timer. <b>Back to lobby</b> keeps the teams but clears scores and the timer. <b>Reset everything</b> also empties the lobby, so students have to type their names again.
+  <p class="none" style="margin:14px 0 0">Students type their name, pick one of the fixed teams (2 per team) and press Ready. <b>Start</b> locks teams and opens uploads (the button shows how many teams are ready). <b>Stop</b> pauses uploads; Start again resumes the same timer. <b>Back to lobby</b> keeps the teams but clears scores and the timer. <b>Reset everything</b> also empties the lobby, so students have to type their names again.
   &nbsp;<a href="board.html" target="_blank">Projector view</a> &middot; <a id="csv" href="#" target="_blank">Download CSV</a></p>
   <p class="none" id="scoring" style="margin:8px 0 0"></p>
 </div>
-<div class="card" id="manage"><h2>Manage teams</h2><p class="none" style="margin:0 0 6px">Move a student to another team or a new solo team, or remove them (they go back to the name screen).</p><div class="teams" id="mteams"><div class="empty">Type the password to see the lobby.</div></div></div>
+<div class="card" id="manage"><h2>Manage teams</h2><p class="none" style="margin:0 0 6px">Move a student to another team (or off their team), or remove them (they go back to the name screen).</p><div class="teams" id="mteams"><div class="empty">Type the password to see the lobby.</div></div></div>
 <div class="card" id="board"></div>
 </main>
 <script src="config.js"></script><script src="board.js"></script>
@@ -21,11 +21,12 @@ const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(i
 try{$("key").value=sessionStorage.getItem("tk")||""}catch(e){}
 let last=null,admin=null;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function manage(){if(!admin)return;const L=admin.lobby;if(!L.teams.length){$("mteams").innerHTML='<div class="empty">Nobody in the lobby yet.</div>';return}
+function manage(){if(!admin)return;const L=admin.lobby;if(!L.players){$("mteams").innerHTML='<div class="empty">Nobody in the lobby yet.</div>';return}
   const sig=JSON.stringify(L);if(manage.sig===sig)return;manage.sig=sig;
-  $("mteams").innerHTML=L.teams.map(x=>`<div class="team${x.ready?" ready":""}"><div class="none" style="font-size:.8rem;font-weight:700">TEAM ${x.n}</div>${x.members.map(m=>{
-    const opts=L.teams.filter(y=>y.id!==x.id&&y.members.length<2).map(y=>`<option value="${y.id}">Team ${y.n} (${esc(y.names)})</option>`).join("");
-    return `<div class="who"><span class="em">${m.emoji||""}</span>${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}<div class="row" style="gap:6px;margin:4px 0 8px"><select data-p="${m.pid}" style="font:inherit;font-size:.85rem;padding:4px 6px;border-radius:8px;background:var(--card);color:var(--ink);border:1px solid var(--line)"><option value="">Move to…</option><option value="new">New solo team</option>${opts}</select><button class="ghost" style="padding:4px 10px;font-size:.85rem" data-kick="${m.pid}" data-n="${esc(m.name)}">Remove</button></div></div>`}).join("")}</div>`).join("");
+  const member=(m,here)=>{const opts=L.teams.filter(y=>y.id!==here&&!y.full).map(y=>`<option value="${y.id}">${y.emoji} ${esc(y.name)}${y.members.length?" ("+esc(y.names)+")":""}</option>`).join("");
+    return `<div class="who">${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}<div class="row" style="gap:6px;margin:4px 0 8px"><select data-p="${m.pid}" style="font:inherit;font-size:.85rem;padding:4px 6px;border-radius:8px;background:var(--card);color:var(--ink);border:1px solid var(--line)"><option value="">Move to…</option>${here?'<option value="none">No team</option>':""}${opts}</select><button class="ghost" style="padding:4px 10px;font-size:.85rem" data-kick="${m.pid}" data-n="${esc(m.name)}">Remove</button></div></div>`};
+  $("mteams").innerHTML=L.teams.map(x=>`<div class="team${x.ready?" ready":""}"><div class="none" style="font-size:.8rem;font-weight:700"><span class="em">${x.emoji}</span>${esc(x.name).toUpperCase()}</div>${x.members.length?x.members.map(m=>member(m,x.id)).join(""):'<div class="none" style="font-size:.85rem">empty</div>'}</div>`).join("")+
+    (L.unassigned.length?`<div class="team"><div class="none" style="font-size:.8rem;font-weight:700">NOT ON A TEAM</div>${L.unassigned.map(m=>member(m,null)).join("")}</div>`:"");
   for(const s of document.querySelectorAll("#mteams select"))s.onchange=()=>{if(s.value)act("move",{player:s.dataset.p,team:s.value})};
   for(const b of document.querySelectorAll("#mteams button[data-kick]"))b.onclick=()=>{if(confirm(`Remove ${b.dataset.n} from the lobby?`))act("kick",{player:b.dataset.kick})}}
 setInterval(()=>{if($("key").value)act("check",{},true)},2500);

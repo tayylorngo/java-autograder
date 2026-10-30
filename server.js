@@ -27,29 +27,41 @@ const cellPoints = (c) => {
 };
 // state: "waiting" (lobby; teams can form) | "open" (uploads allowed, teams locked) | "closed" (paused/finished)
 // players: { id: { name, team, ready, lastSeen } }   teams: { id: { members: [playerId], cells: { progId: { attempts, best, total, solvedAt, points } } } }
-const fresh = () => ({ state: "waiting", startedAt: null, players: {}, teams: {} });
+// Fixed teams. Override with the TEAMS environment variable, e.g. TEAMS="Pumpkin 🎃, Ghost 👻, Witch 🧙" (name then icon, comma separated).
+const TEAMS = (process.env.TEAMS || "Pumpkin 🎃, Ghost 👻, Zombie 🧟, Alien 👽, Robot 🤖, Dragon 🐲").split(",").map((x, i) => {
+  const m = x.trim().match(/^(.*?)\s+(\S+)$/); const name = m ? m[1].trim() : x.trim(), emoji = m ? m[2] : "🎃";
+  return { id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "team" + (i + 1), n: i + 1, name, emoji };
+});
+const TEAM_SIZE = +process.env.TEAM_SIZE || 2;
+const fresh = () => ({ state: "waiting", startedAt: null, players: {}, teams: Object.fromEntries(TEAMS.map(t => [t.id, { members: [], cells: {} }])) });
 let S = fresh();
-try { const j = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); if (j && j.players && j.teams) S = { ...fresh(), ...j }; } catch (e) {}
-Object.values(S.teams).forEach((t, i) => { if (!t.created) t.created = i; if (!t.n) t.n = i + 1; });
+try { const j = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); if (j && j.players && j.teams) S = { ...fresh(), ...j, teams: { ...fresh().teams, ...j.teams } }; } catch (e) {}
+for (const id of Object.keys(S.teams)) if (!TEAMS.some(t => t.id === id)) delete S.teams[id];          // teams from an older version or a different TEAMS list
+for (const [id, p] of Object.entries(S.players)) if (p.team && !S.teams[p.team]) p.team = null;
+for (const [id, t] of Object.entries(S.teams)) t.members = t.members.filter(p => S.players[p] && S.players[p].team === id);
 const save = () => { try { fs.writeFileSync(STATE_FILE, JSON.stringify(S)); } catch (e) {} };
 const newId = () => crypto.randomUUID();
 const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 40);
 const nameKey = (n) => cleanName(n).toLowerCase();
 const ONLINE_MS = 15000;
-const EMOJIS = ["🎃", "👻", "🧛", "🧟", "🧙", "🧞", "🧚", "🦇", "🕷️", "🕸️", "💀", "☠️", "🐈‍⬛", "🦉", "🐺", "🍬", "🍭", "🍫", "🧹", "🔮", "⚰️", "🪦", "🌕", "⚡", "🔥", "🧪", "🗡️", "🪄", "🎭", "🤖", "👽", "🐲"];
-const cleanEmoji = (e) => EMOJIS.includes(e) ? e : EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+const def = (id) => TEAMS.find(t => t.id === id);
 const teamNames = (t) => t.members.map(p => (S.players[p] || { name: "?" }).name).join(" & ");
-const teamName = (t) => "Team " + t.n + " (" + teamNames(t) + ")";
-// Teams are numbered 1..k in order of creation. While the lobby is open the numbers close up as empty teams vanish; after Start they are frozen.
-function renumber() { if (S.state !== "waiting") return; Object.values(S.teams).filter(t => t.members.length).sort((a, b) => a.created - b.created).forEach((t, i) => t.n = i + 1); }
-const teamMembers = (t, ids) => t.members.map(p => { const pl = S.players[p]; return { ...(ids ? { pid: p } : {}), name: pl.name, emoji: pl.emoji || "🎃", ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
-const teamEmojis = (t) => t.members.map(p => (S.players[p] || {}).emoji || "🎃").join("");
-function leaveTeam(pid) {
-  const pl = S.players[pid], t = S.teams[pl.team];
-  if (t) { t.members = t.members.filter(x => x !== pid); if (!t.members.length) delete S.teams[pl.team]; }
-  pl.team = null; renumber();
+const teamMembers = (t, ids) => t.members.map(p => { const pl = S.players[p]; return { ...(ids ? { pid: p } : {}), name: pl.name, ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
+const teamLabel = (id) => { const d = def(id), t = S.teams[id]; return d ? d.emoji + " " + d.name + (t && t.members.length ? " (" + teamNames(t) + ")" : "") : "no team"; };
+function leaveTeam(pid) { const pl = S.players[pid], t = pl.team && S.teams[pl.team]; if (t) t.members = t.members.filter(x => x !== pid); pl.team = null; pl.ready = false; }
+// returns an error string, or null when the player is now in that team
+function joinTeam(pid, teamId, byTeacher) {
+  const pl = S.players[pid], t = S.teams[teamId];
+  if (!t) return "That team does not exist.";
+  if (teamId === pl.team) return null;
+  if (t.members.length >= TEAM_SIZE) return "That team is full.";
+  if (!byTeacher) {
+    if (S.state !== "waiting" && pl.team) return "Teams are locked once the challenge has started.";
+    if (pl.ready) return "Un-ready first to change teams.";
+    if (t.members.some(p => S.players[p].ready)) return "That team already pressed Ready.";
+  }
+  leaveTeam(pid); t.members.push(pid); pl.team = teamId; return null;
 }
-function soloTeam(pid) { const id = newId(); S.teams[id] = { n: Object.keys(S.teams).length + 1, created: Date.now(), members: [pid], cells: {} }; S.players[pid].team = id; renumber(); return id; }
 function record(team, prog, out) {
   if (!out.total) return null;                                      // not compiled: no attempt counted
   const c = team.cells[prog.id] || (team.cells[prog.id] = { attempts: 0, best: 0, total: out.total, solvedAt: null, points: 0 });
@@ -68,11 +80,14 @@ const teamTotals = (t) => {
   return { points: cells.reduce((a, c) => a + c.points, 0), solved: cells.filter(c => c.solvedAt !== null).length, tests: cells.reduce((a, c) => a + c.best, 0),
     last: cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0) };
 };
-const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
-  .sort((a, b) => b.points - a.points || b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.name.localeCompare(b.name));
+const teamRow = (id, t, ids) => { const d = def(id); return { id, n: d.n, name: d.name, emoji: d.emoji, names: teamNames(t), members: teamMembers(t, ids), cells: t.cells, ...teamTotals(t) }; };
+const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => teamRow(id, t))
+  .sort((a, b) => b.points - a.points || b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.n - b.n);
 function lobby(ids) {
-  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).sort((a, b) => a[1].n - b[1].n).map(([id, t]) => { const m = teamMembers(t, ids); return { id, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
-  return { teams, readyTeams: teams.filter(t => t.ready).length, totalTeams: teams.length, players: Object.keys(S.players).length };
+  const teams = TEAMS.map(d => { const t = S.teams[d.id], m = teamMembers(t, ids); return { id: d.id, n: d.n, name: d.name, emoji: d.emoji, names: teamNames(t), members: m, ready: m.length > 0 && m.every(x => x.ready), full: m.length >= TEAM_SIZE }; });
+  const unassigned = Object.entries(S.players).filter(([, p]) => !p.team).map(([pid, p]) => ({ ...(ids ? { pid } : {}), name: p.name, online: Date.now() - p.lastSeen < ONLINE_MS }));
+  const formed = teams.filter(t => t.members.length);
+  return { teams, unassigned, readyTeams: formed.filter(t => t.ready).length, totalTeams: formed.length, players: Object.keys(S.players).length, teamSize: TEAM_SIZE };
 }
 function board(ids) {
   return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, lobby: lobby(ids),
@@ -81,11 +96,11 @@ function board(ids) {
 function me(pid) {
   const pl = S.players[pid]; if (!pl) return null;
   pl.lastSeen = Date.now();
-  if (!pl.team || !S.teams[pl.team]) soloTeam(pid);
+  const base = { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, me: { id: pid, name: pl.name, ready: !!pl.ready }, lobby: lobby() };
+  if (!pl.team || !S.teams[pl.team]) return { ...base, team: null };
   const t = S.teams[pl.team], rows = rankTeams(), rank = rows.findIndex(r => r.id === pl.team) + 1;
-  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, emojis: EMOJIS, me: { id: pid, name: pl.name, emoji: pl.emoji || "🎃", ready: !!pl.ready },
-    team: { id: pl.team, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length,
-      grading: grading[pl.team] || {}, last: Object.fromEntries(Object.entries(lastResult[pl.team] || {}).map(([k, v]) => [k, { by: v.by, at: v.at, passed: v.out.passed, total: v.out.total, error: v.out.error || null }])) }, lobby: lobby() };
+  return { ...base, team: { ...teamRow(pl.team, t), rank, of: rows.length, grading: grading[pl.team] || {},
+    last: Object.fromEntries(Object.entries(lastResult[pl.team] || {}).map(([k, v]) => [k, { by: v.by, at: v.at, passed: v.out.passed, total: v.out.total, error: v.out.error || null }])) } };
 }
 // Student processes get a minimal environment: never TEACHER_KEY or anything else from the host.
 const childEnv = {};
@@ -257,7 +272,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, "");
   if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header, prompt: p.prompt || "",
     samples: p.tests.map((t, i) => ({ name: "Test " + (i + 1), input: t.input, expected: t.expected, parts: t.parts })) })));
-  if (url.pathname === "/api/status") return send(res, 200, { state: S.state, emojis: EMOJIS });
+  if (url.pathname === "/api/status") return send(res, 200, { state: S.state, teams: TEAMS, teamSize: TEAM_SIZE });
   if (url.pathname === "/api/board") return send(res, 200, board());
   if (url.pathname === "/api/admin" && req.method === "POST") {
     let b = ""; req.on("data", d => { b += d; if (b.length > 2000) req.destroy(); });
@@ -266,15 +281,15 @@ const server = http.createServer((req, res) => {
       if (!TEACHER_KEY) return send(res, 403, { error: "TEACHER_KEY is not set on the server." });
       if (tooManyFails(ip)) return send(res, 429, { error: "Too many wrong passwords — wait 10 minutes." });
       if (typeof j.key !== "string" || j.key !== TEACHER_KEY) { fails.get(ip).push(Date.now()); return send(res, 403, { error: "Wrong password." }); }
-      if (j.action === "start") { renumber(); if (S.state === "waiting" || !S.startedAt) S.startedAt = Date.now(); S.state = "open"; }
+      if (j.action === "start") { if (S.state === "waiting" || !S.startedAt) S.startedAt = Date.now(); S.state = "open"; }
       else if (j.action === "stop") S.state = "closed";
       else if (j.action === "reset") { S = fresh(); for (const k of Object.keys(lastResult)) delete lastResult[k]; }   // everyone back to the name screen
-      else if (j.action === "lobby") { S.state = "waiting"; S.startedAt = null; for (const t of Object.values(S.teams)) t.cells = {}; for (const p of Object.values(S.players)) p.ready = false; renumber(); for (const k of Object.keys(lastResult)) delete lastResult[k]; }  // keep teams, clear scores
+      else if (j.action === "lobby") { S.state = "waiting"; S.startedAt = null; for (const t of Object.values(S.teams)) t.cells = {}; for (const p of Object.values(S.players)) p.ready = false; for (const k of Object.keys(lastResult)) delete lastResult[k]; }  // keep teams, clear scores
       else if (j.action === "kick") { const pl = S.players[j.player]; if (!pl) return send(res, 404, { error: "That student is gone already." }); leaveTeam(j.player); delete S.players[j.player]; }
       else if (j.action === "move") {
         const pl = S.players[j.player]; if (!pl) return send(res, 404, { error: "That student is gone already." });
-        if (j.team === "new") { leaveTeam(j.player); soloTeam(j.player); }
-        else { const t = S.teams[j.team]; if (!t || !t.members.length) return send(res, 404, { error: "That team is gone." }); if (t.members.length >= 2) return send(res, 409, { error: "That team is full." }); if (j.team !== pl.team) { leaveTeam(j.player); t.members.push(j.player); pl.team = j.team; renumber(); } }
+        if (j.team === "none") leaveTeam(j.player);
+        else { const err = joinTeam(j.player, String(j.team || ""), true); if (err) return send(res, 409, { error: err }); }
       }
       else if (j.action !== "check") return send(res, 400, { error: "Unknown action" });
       save(); send(res, 200, board(true));
@@ -301,35 +316,24 @@ const server = http.createServer((req, res) => {
       if (Date.now() - dup[1].lastSeen < ONLINE_MS) return send(res, 409, { error: "Someone with that name is already in the lobby. Add your last initial." });
       return send(res, 200, me(dup[0]));                                                           // same student, new device/browser
     }
-    const id = newId(); S.players[id] = { name, emoji: cleanEmoji(j.emoji), team: null, ready: false, lastSeen: Date.now() }; soloTeam(id); save();
+    const id = newId(); S.players[id] = { name, team: null, ready: false, lastSeen: Date.now() }; save();
     send(res, 200, me(id));
   });
   if (url.pathname === "/api/result") {
     const pl = S.players[String(url.searchParams.get("id") || "")]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
-    const v = (lastResult[pl.team] || {})[String(url.searchParams.get("program") || "")]; return v ? send(res, 200, { by: v.by, at: v.at, ...v.out }) : send(res, 404, { error: "No upload yet." });
+    const v = pl.team ? (lastResult[pl.team] || {})[String(url.searchParams.get("program") || "")] : null; return v ? send(res, 200, { by: v.by, at: v.at, ...v.out }) : send(res, 404, { error: "No upload yet." });
   }
   if (url.pathname === "/api/me") { const m = me(String(url.searchParams.get("id") || "")); return m ? send(res, 200, m) : send(res, 404, { error: "Not in the lobby. Type your name again." }); }
   if (url.pathname === "/api/team" && req.method === "POST") return readJson(j => {
     const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
-    if (S.state !== "waiting") return send(res, 409, { error: "Teams are locked once the challenge has started." });
-    if (pl.ready) return send(res, 409, { error: "Un-ready first to change teams." });
-    if (j.action === "join") {
-      const t = S.teams[j.team];
-      if (!t || !t.members.length || j.team === pl.team) return send(res, 404, { error: "That team is gone." });
-      if (t.members.length >= 2) return send(res, 409, { error: "That team is full." });
-      if (S.players[t.members[0]].ready) return send(res, 409, { error: "That student already pressed Ready (going solo)." });
-      leaveTeam(j.id); t.members.push(j.id); pl.team = j.team;
-    } else if (j.action === "leave") { leaveTeam(j.id); soloTeam(j.id); }
+    if (j.action === "join") { const err = joinTeam(j.id, String(j.team || ""), false); if (err) return send(res, 409, { error: err }); }
+    else if (j.action === "leave") { if (S.state !== "waiting") return send(res, 409, { error: "Teams are locked once the challenge has started." }); if (pl.ready) return send(res, 409, { error: "Un-ready first to leave the team." }); leaveTeam(j.id); }
     else return send(res, 400, { error: "Unknown action" });
     save(); send(res, 200, me(j.id));
   });
-  if (url.pathname === "/api/emoji" && req.method === "POST") return readJson(j => {
-    const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
-    if (!EMOJIS.includes(j.emoji)) return send(res, 400, { error: "Pick one of the icons." });
-    pl.emoji = j.emoji; save(); send(res, 200, me(j.id));
-  });
   if (url.pathname === "/api/ready" && req.method === "POST") return readJson(j => {
     const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
+    if (!pl.team) return send(res, 409, { error: "Pick a team first." });
     if (S.state === "waiting") { pl.ready = !!j.ready; save(); }
     send(res, 200, me(j.id));
   });
@@ -346,7 +350,7 @@ const server = http.createServer((req, res) => {
         if (!prog || typeof j.code !== "string") return send(res, 400, { error: "Pick a program and upload a .java file." });
         if (j.code.length > MAX_CODE) return send(res, 413, { error: "File too large (max 30 KB)." });
         const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "You are not in the lobby any more. Reload the page and type your name again.", rejoin: true });
-        if (!pl.team || !S.teams[pl.team]) soloTeam(j.id);
+        if (!pl.team || !S.teams[pl.team]) return send(res, 409, { error: "Pick a team first." });
         const team = S.teams[pl.team], existing = team.cells[prog.id];
         if (existing && existing.solvedAt !== null) return send(res, 409, { error: "Your team already solved this one!" });
         const g = grading[pl.team] || (grading[pl.team] = {});
@@ -361,7 +365,7 @@ const server = http.createServer((req, res) => {
           const tot = teamTotals(team);
           const at = Date.now(), score = cell ? { attempts: cell.attempts, best: cell.best, total: cell.total, solved: cell.solvedAt !== null, points: cell.points } : null;
           (lastResult[pl.team] || (lastResult[pl.team] = {}))[prog.id] = { by: pl.name, at, out: { ...out, score } };
-          try { fs.appendFileSync(LOG, JSON.stringify({ time: new Date().toISOString(), team: teamName(team), player: pl.name, program: prog.id, passed: out.passed || 0, total: out.total || prog.tests.length, compiled: !out.error || out.error !== "Compile error", points: cell ? cell.points : null }) + "\n"); } catch (e) {}
+          try { fs.appendFileSync(LOG, JSON.stringify({ time: new Date().toISOString(), team: teamLabel(pl.team), player: pl.name, program: prog.id, passed: out.passed || 0, total: out.total || prog.tests.length, compiled: !out.error || out.error !== "Compile error", points: cell ? cell.points : null }) + "\n"); } catch (e) {}
           send(res, 200, { ...out, score, at, by: pl.name, team: { points: tot.points, solved: tot.solved } });
         } catch (e) { console.error("grade error", e); send(res, 500, { error: "Grader error — tell Mr. Taylor." }); }
         finally { release(); }
