@@ -3,19 +3,29 @@
 module.exports = [
   { id: "candycheck", title: "Program 1 — CandyCheck", cls: "CandyCheck",
     header: "public static String rating(int pieces)",
-    prompt: `Read the trick-or-treater's name and how many pieces of candy they collected, then rate the haul.
+    prompt: `Halloween night is over and it's time to judge the haul. Write a program that asks the trick-or-treater for their name and how many pieces of candy they collected, then prints a one-line verdict.
 
-Prompts (print exactly, no newline after them):
-  Name: 
-  Pieces of candy: 
+Your program must read exactly two things, in this order, with these exact prompts (no newline after a prompt):
+  1. Name:                 a single word (use in.next())
+  2. Pieces of candy:      a whole number (use in.nextInt())
 
-Write rating(pieces) so it returns:
-  50 or more  ->  "Legendary haul!"
-  25 to 49    ->  "Solid haul."
-  10 to 24    ->  "Not bad."
-  under 10    ->  "The neighbors ghosted you."
+Write this method exactly as shown and call it from main:
+  public static String rating(int pieces)
 
-Then print one line:  NAME collected N pieces: RATING`,
+rating returns a String based on how many pieces were collected:
+  50 or more     ->  "Legendary haul!"
+  25 through 49  ->  "Solid haul."
+  10 through 24  ->  "Not bad."
+  fewer than 10  ->  "The neighbors ghosted you."
+Use if / else if / else. Watch the boundaries: exactly 50 is Legendary, exactly 25 is Solid, exactly 10 is Not bad.
+
+Finally print one line in this exact format (name, a space, "collected", the number, "pieces:", then the rating):
+  NAME collected N pieces: RATING
+
+Example run (what the user types is shown in orange in the test cases below):
+  Name: Kostia
+  Pieces of candy: 52
+  Kostia collected 52 pieces: Legendary haul!`,
     samples: [["Kostia","52"],["Amiyah","30"],["Lior","12"],["Matthew","4"]],
     hidden:  [["Sika","50"],["Conrad","25"],["Angel","10"],["Travis","9"],["Nikolay","0"],["Austin","100"]] },
   { id: "hauntedDoor", title: "Program 2 — HauntedDoor", cls: "HauntedDoor",

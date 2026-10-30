@@ -36,11 +36,14 @@ const newId = () => crypto.randomUUID();
 const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 40);
 const nameKey = (n) => cleanName(n).toLowerCase();
 const ONLINE_MS = 15000;
+const EMOJIS = ["🎃", "👻", "🧛", "🧟", "🧙", "🧞", "🧚", "🦇", "🕷️", "🕸️", "💀", "☠️", "🐈‍⬛", "🦉", "🐺", "🍬", "🍭", "🍫", "🧹", "🔮", "⚰️", "🪦", "🌕", "⚡", "🔥", "🧪", "🗡️", "🪄", "🎭", "🤖", "👽", "🐲"];
+const cleanEmoji = (e) => EMOJIS.includes(e) ? e : EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
 const teamNames = (t) => t.members.map(p => (S.players[p] || { name: "?" }).name).join(" & ");
 const teamName = (t) => "Team " + t.n + " (" + teamNames(t) + ")";
 // Teams are numbered 1..k in order of creation. While the lobby is open the numbers close up as empty teams vanish; after Start they are frozen.
 function renumber() { if (S.state !== "waiting") return; Object.values(S.teams).filter(t => t.members.length).sort((a, b) => a.created - b.created).forEach((t, i) => t.n = i + 1); }
-const teamMembers = (t, ids) => t.members.map(p => { const pl = S.players[p]; return { ...(ids ? { pid: p } : {}), name: pl.name, ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
+const teamMembers = (t, ids) => t.members.map(p => { const pl = S.players[p]; return { ...(ids ? { pid: p } : {}), name: pl.name, emoji: pl.emoji || "🎃", ready: !!pl.ready, online: Date.now() - pl.lastSeen < ONLINE_MS }; });
+const teamEmojis = (t) => t.members.map(p => (S.players[p] || {}).emoji || "🎃").join("");
 function leaveTeam(pid) {
   const pl = S.players[pid], t = S.teams[pl.team];
   if (t) { t.members = t.members.filter(x => x !== pid); if (!t.members.length) delete S.teams[pl.team]; }
@@ -65,10 +68,10 @@ const teamTotals = (t) => {
   return { points: cells.reduce((a, c) => a + c.points, 0), solved: cells.filter(c => c.solvedAt !== null).length, tests: cells.reduce((a, c) => a + c.best, 0),
     last: cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0) };
 };
-const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, n: t.n, name: "Team " + t.n, names: teamNames(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
+const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => ({ id, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t) }))
   .sort((a, b) => b.points - a.points || b.solved - a.solved || b.tests - a.tests || a.last - b.last || a.name.localeCompare(b.name));
 function lobby(ids) {
-  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).sort((a, b) => a[1].n - b[1].n).map(([id, t]) => { const m = teamMembers(t, ids); return { id, n: t.n, name: "Team " + t.n, names: teamNames(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
+  const teams = Object.entries(S.teams).filter(([, t]) => t.members.length).sort((a, b) => a[1].n - b[1].n).map(([id, t]) => { const m = teamMembers(t, ids); return { id, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: m, ready: m.every(x => x.ready), full: m.length >= 2 }; });
   return { teams, readyTeams: teams.filter(t => t.ready).length, totalTeams: teams.length, players: Object.keys(S.players).length };
 }
 function board(ids) {
@@ -80,8 +83,8 @@ function me(pid) {
   pl.lastSeen = Date.now();
   if (!pl.team || !S.teams[pl.team]) soloTeam(pid);
   const t = S.teams[pl.team], rows = rankTeams(), rank = rows.findIndex(r => r.id === pl.team) + 1;
-  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, me: { id: pid, name: pl.name, ready: !!pl.ready },
-    team: { id: pl.team, n: t.n, name: "Team " + t.n, names: teamNames(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length,
+  return { state: S.state, startedAt: S.startedAt, now: Date.now(), scoring: SCORING, emojis: EMOJIS, me: { id: pid, name: pl.name, emoji: pl.emoji || "🎃", ready: !!pl.ready },
+    team: { id: pl.team, n: t.n, name: "Team " + t.n, names: teamNames(t), emojis: teamEmojis(t), members: teamMembers(t), cells: t.cells, ...teamTotals(t), rank, of: rows.length,
       grading: grading[pl.team] || {}, last: Object.fromEntries(Object.entries(lastResult[pl.team] || {}).map(([k, v]) => [k, { by: v.by, at: v.at, passed: v.out.passed, total: v.out.total, error: v.out.error || null }])) }, lobby: lobby() };
 }
 // Student processes get a minimal environment: never TEACHER_KEY or anything else from the host.
@@ -254,7 +257,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, "");
   if (url.pathname === "/api/programs") return send(res, 200, PROGRAMS.map(p => ({ id: p.id, title: p.title, cls: p.cls, header: p.header, prompt: p.prompt || "",
     samples: p.tests.map((t, i) => ({ name: "Test " + (i + 1), input: t.input, expected: t.expected, parts: t.parts })) })));
-  if (url.pathname === "/api/status") return send(res, 200, { state: S.state });
+  if (url.pathname === "/api/status") return send(res, 200, { state: S.state, emojis: EMOJIS });
   if (url.pathname === "/api/board") return send(res, 200, board());
   if (url.pathname === "/api/admin" && req.method === "POST") {
     let b = ""; req.on("data", d => { b += d; if (b.length > 2000) req.destroy(); });
@@ -298,7 +301,7 @@ const server = http.createServer((req, res) => {
       if (Date.now() - dup[1].lastSeen < ONLINE_MS) return send(res, 409, { error: "Someone with that name is already in the lobby. Add your last initial." });
       return send(res, 200, me(dup[0]));                                                           // same student, new device/browser
     }
-    const id = newId(); S.players[id] = { name, team: null, ready: false, lastSeen: Date.now() }; soloTeam(id); save();
+    const id = newId(); S.players[id] = { name, emoji: cleanEmoji(j.emoji), team: null, ready: false, lastSeen: Date.now() }; soloTeam(id); save();
     send(res, 200, me(id));
   });
   if (url.pathname === "/api/result") {
@@ -319,6 +322,11 @@ const server = http.createServer((req, res) => {
     } else if (j.action === "leave") { leaveTeam(j.id); soloTeam(j.id); }
     else return send(res, 400, { error: "Unknown action" });
     save(); send(res, 200, me(j.id));
+  });
+  if (url.pathname === "/api/emoji" && req.method === "POST") return readJson(j => {
+    const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });
+    if (!EMOJIS.includes(j.emoji)) return send(res, 400, { error: "Pick one of the icons." });
+    pl.emoji = j.emoji; save(); send(res, 200, me(j.id));
   });
   if (url.pathname === "/api/ready" && req.method === "POST") return readJson(j => {
     const pl = S.players[j.id]; if (!pl) return send(res, 404, { error: "Not in the lobby. Type your name again." });

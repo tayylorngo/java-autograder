@@ -33,3 +33,8 @@ a{color:var(--orange)}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:cent
 .join{background:var(--orange);color:#1b1000}
 .lobbyhead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
 h2{font-size:1.2rem;margin:0 0 8px}
+/* compact leaderboard (student sidebar) */
+.em{font-size:1.25em;margin-right:4px}
+table.compact td{padding:8px 6px;text-align:left;vertical-align:top}table.compact td.pts{text-align:right;font-size:1.1rem}
+.marks{display:flex;gap:4px;margin-top:4px}.mark{font-size:.72rem;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
+.mark.ok{color:var(--ok);border-color:var(--ok)}.mark.part{color:var(--orange);border-color:var(--orange)}

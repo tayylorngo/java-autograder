@@ -2,7 +2,14 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Halloween Pair Challenge</title><link rel="stylesheet" href="style.css">
 <style>
-main{max-width:860px}
+main{max-width:860px}main.wide{max-width:1280px}
+.play{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media(max-width:900px){.play{grid-template-columns:1fr}}
+.side{position:sticky;top:12px}.side h2{display:flex;justify-content:space-between;align-items:baseline}.side h2 a{font-size:.85rem;font-weight:500}
+.emojis{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.emojis button{width:42px;height:42px;padding:0;font-size:1.4rem;background:var(--code);border:2px solid var(--line);border-radius:10px;line-height:1}
+.emojis button.sel{border-color:var(--orange);background:var(--card)}
+.em{font-size:1.25em;margin-right:4px}
 input[type=text]{flex:1;min-width:200px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit}
 code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem}
 code{background:var(--code);padding:2px 6px;border-radius:6px}
@@ -43,12 +50,14 @@ pre.term .unread{color:var(--mute);text-decoration:line-through}
   <h2>Who are you?</h2>
   <p class="none" style="margin-top:0">One name per person. Your partner enters their own name on their own laptop, then you join up in the lobby.</p>
   <div class="row"><input id="who" type="text" maxlength="40" placeholder="First name and last initial, e.g. Kostia P." autocomplete="off"><button class="go" id="join">Enter the lobby</button></div>
+  <div class="lbl" style="margin-top:14px">Pick your icon</div><div class="emojis" id="pick"></div>
   <p id="joinerr" class="bad" style="margin:8px 0 0"></p>
 </section>
 
 <section id="s-lobby" hidden>
   <div class="card lock">Waiting for Mr. Taylor to press Start...</div>
   <div class="card" id="myteam"></div>
+  <div class="card"><div class="lbl" style="margin-top:0">Your icon</div><div class="emojis" id="pick2"></div></div>
   <div class="card"><div class="lobbyhead"><h2>Teams</h2><span class="none" id="readycount"></span></div>
     <p class="none" style="margin:0 0 4px">Teams are 2 people max. Click <b>Join</b> on someone who is alone, or stay solo. Press <b>Ready</b> when your team is final; Ready locks you in.</p>
     <div class="teams" id="teams"></div></div>
@@ -56,31 +65,38 @@ pre.term .unread{color:var(--mute);text-decoration:line-through}
 
 <section id="s-play" hidden>
   <div class="card lock" id="lock" hidden></div>
-  <div class="card scorebar" id="scorebar"></div>
-  <div class="tabs" id="tabs"></div>
-  <div id="panel"></div>
+  <div class="play"><div>
+    <div class="card scorebar" id="scorebar"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panel"></div>
+  </div><aside class="side"><div class="card"><h2>Leaderboard <a href="board.html" target="_blank">big view</a></h2><div id="board" data-compact="1"></div></div></aside></div>
 </section>
 </main>
 <div id="busy" hidden><div class="spin"></div><b id="busytxt">Compiling and running your program...</b><span>Running every test case, this takes a few seconds.</span></div>
-<script src="config.js"></script>
+<script src="config.js"></script><script src="board.js"></script>
 <script>
 const API=(window.API_URL||"").replace(/\/$/,""),$=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const mmss=ms=>{const t=Math.max(0,Math.floor(ms/1000));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
 let pid=null;try{pid=localStorage.getItem("pid")}catch(e){}
-let programs=[],M=null,offset=0,cur=null,busy=false;const U={};   // U[programId] = {code,fname,result,sig}
+let programs=[],M=null,offset=0,cur=null,busy=false,U={},EM=[],myEmoji=null;   // U[programId] = {code,fname,result,sig}
+function clearLocal(){U={};lobbySig="";playSig="";for(const k of Object.keys(U))delete U[k];const o=$("panel");if(o)o.innerHTML="";}   // after Reset / leaving the game nothing from the last round lingers
+try{myEmoji=localStorage.getItem("emoji")||null}catch(e){}
+function drawPick(el,cur){if(!el||!EM.length)return;const sig=cur+EM.length;if(el.dataset.sig===sig)return;el.dataset.sig=sig;el.innerHTML=EM.map(e=>`<button type="button" class="${e===cur?"sel":""}" data-e="${e}">${e}</button>`).join("");
+  for(const b of el.querySelectorAll("button"))b.onclick=()=>{myEmoji=b.dataset.e;try{localStorage.setItem("emoji",myEmoji)}catch(e){}drawPick(el,myEmoji);if(el.id==="pick2"&&pid)act("/api/emoji",{emoji:myEmoji})}}
 const post=async(p,b)=>{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return{s:r.status,d:await r.json().catch(()=>({}))}};
 const setPid=v=>{pid=v;try{v?localStorage.setItem("pid",v):localStorage.removeItem("pid")}catch(e){}};
-function screen(n){for(const s of["s-name","s-lobby","s-play"])$(s).hidden=s!==n}
+function screen(n){for(const s of["s-name","s-lobby","s-play"])$(s).hidden=s!==n;document.querySelector("main").classList.toggle("wide",n==="s-play");if(n==="s-name")nameScreen()}
 fetch(API+"/api/programs").then(r=>r.json()).then(p=>{programs=p;if(!cur)cur=p[0].id;render()}).catch(()=>{$("joinerr").textContent="Could not reach the grader. Tell Mr. Taylor."});
 try{$("who").value=localStorage.getItem("who")||""}catch(e){}
 $("join").onclick=join;$("who").onkeydown=e=>{if(e.key==="Enter")join()};$("who").onfocus=()=>$("who").select();
 async function join(){const name=$("who").value.trim();if(name.length<2){$("joinerr").textContent="Type your name first.";return}
-  $("join").disabled=true;try{const r=await post("/api/join",{name});if(r.s===200){setPid(r.d.me.id);try{localStorage.setItem("who",name)}catch(e){}$("joinerr").textContent="";M=r.d;render()}else $("joinerr").textContent=r.d.error||"Could not join."}catch(e){$("joinerr").textContent="Could not reach the grader. Try again."}$("join").disabled=false}
+  $("join").disabled=true;try{const r=await post("/api/join",{name,emoji:myEmoji});if(r.s===200){clearLocal();setPid(r.d.me.id);myEmoji=r.d.me.emoji;try{localStorage.setItem("who",name)}catch(e){}$("joinerr").textContent="";M=r.d;render()}else $("joinerr").textContent=r.d.error||"Could not join."}catch(e){$("joinerr").textContent="Could not reach the grader. Try again."}$("join").disabled=false}
 async function poll(){if(!pid){screen("s-name");return}
-  try{const r=await fetch(API+"/api/me?id="+encodeURIComponent(pid));if(r.status===404){setPid(null);M=null;screen("s-name");return}if(!r.ok)return;M=await r.json();offset=M.now-Date.now();render()}catch(e){}}
+  try{const r=await fetch(API+"/api/me?id="+encodeURIComponent(pid));if(r.status===404){setPid(null);M=null;clearLocal();screen("s-name");return}if(!r.ok)return;const m=await r.json();if(M&&M.state!=="waiting"&&m.state==="waiting")clearLocal();M=m;EM=M.emojis||EM;offset=M.now-Date.now();render()}catch(e){}}
 poll();setInterval(poll,2000);setInterval(tick,1000);
-setInterval(async()=>{if(pid||!$("s-name")||$("s-name").hidden)return;try{const s=(await (await fetch(API+"/api/status")).json()).state;$("chip").className="chip "+s;$("chip").textContent=label[s]}catch(e){}},2500);
+async function nameScreen(){if(pid||$("s-name").hidden)return;try{const d=await (await fetch(API+"/api/status")).json();$("chip").className="chip "+d.state;$("chip").textContent=label[d.state];EM=d.emojis||EM;if(!myEmoji||!EM.includes(myEmoji))myEmoji=EM[Math.floor(Math.random()*EM.length)];drawPick($("pick"),myEmoji)}catch(e){}}
+nameScreen();setInterval(nameScreen,2500);
 function tick(){if(!M)return;$("timer").textContent=M.startedAt?mmss(Date.now()+offset-M.startedAt):""}
 const label={waiting:"Waiting to start",open:"LIVE",closed:"Closed"};
 function render(){if(!M||!programs.length){if(!pid)screen("s-name");return}
@@ -89,21 +105,22 @@ function render(){if(!M||!programs.length){if(!pid)screen("s-name");return}
 let lobbySig="";
 function lobby(){const me=M.me,t=M.team;const sig=JSON.stringify([me,t.id,t.members,M.lobby]);if(sig===lobbySig)return;lobbySig=sig;
   $("myteam").innerHTML=`<div class="lobbyhead"><h2><span class="tn">Team ${t.n}</span> — your team${t.members.length===1?" (solo so far)":""}</h2>${me.ready?'<span class="badge ready">READY</span>':""}</div>`+
-    t.members.map(m=>`<div class="who">${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}</div>`).join("")+
+    t.members.map(m=>`<div class="who"><span class="em">${m.emoji}</span>${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}</div>`).join("")+
     `<div class="row" style="margin-top:10px">${me.ready?'<button class="ghost" id="unready">Not ready</button>':'<button class="go" id="ready">Ready</button>'}${t.members.length>1&&!me.ready?'<button class="ghost" id="leave">Leave team</button>':""}</div>`+
     (me.ready?'<p class="none" style="margin:10px 0 0">You are locked in. Mr. Taylor starts when every team is ready.</p>':"");
+  drawPick($("pick2"),me.emoji);
   if($("ready"))$("ready").onclick=()=>act("/api/ready",{ready:true});if($("unready"))$("unready").onclick=()=>act("/api/ready",{ready:false});if($("leave"))$("leave").onclick=()=>act("/api/team",{action:"leave"});
   const others=M.lobby.teams.filter(x=>x.id!==t.id);
   $("readycount").textContent=`${M.lobby.readyTeams} of ${M.lobby.totalTeams} teams ready`;
   $("teams").innerHTML=others.length?others.map(x=>{const canJoin=!me.ready&&x.members.length===1&&!x.members[0].ready;
-    return `<div class="team${x.ready?" ready":""}"><div class="none" style="font-size:.8rem;font-weight:700;margin-bottom:4px">TEAM ${x.n}</div>${x.members.map(m=>`<div class="who">${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}</div>`).join("")}${x.members.length===1?(canJoin?`<button class="join" data-t="${x.id}">Join</button>`:'<div class="none" style="font-size:.85rem;margin-top:6px">'+(x.members[0].ready?"going solo":"")+'</div>'):'<div class="none" style="font-size:.85rem;margin-top:6px">full</div>'}</div>`}).join(""):'<div class="empty">Nobody else is here yet.</div>';
+    return `<div class="team${x.ready?" ready":""}"><div class="none" style="font-size:.8rem;font-weight:700;margin-bottom:4px">TEAM ${x.n}</div>${x.members.map(m=>`<div class="who"><span class="em">${m.emoji}</span>${esc(m.name)}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}</div>`).join("")}${x.members.length===1?(canJoin?`<button class="join" data-t="${x.id}">Join</button>`:'<div class="none" style="font-size:.85rem;margin-top:6px">'+(x.members[0].ready?"going solo":"")+'</div>'):'<div class="none" style="font-size:.85rem;margin-top:6px">full</div>'}</div>`}).join(""):'<div class="empty">Nobody else is here yet.</div>';
   for(const b of document.querySelectorAll("button.join"))b.onclick=()=>act("/api/team",{action:"join",team:b.dataset.t})}
 async function act(p,b){try{const r=await post(p,{id:pid,...b});if(r.s===200){M=r.d;render()}else if(r.s===404){setPid(null);screen("s-name")}else alert(r.d.error||"Could not do that.")}catch(e){}}
 let playSig="";
 function play(){const t=M.team;
   const l=$("lock");l.hidden=M.state==="open";l.textContent="Submissions are closed.";
   const sig=JSON.stringify([t.name,t.points,t.rank,t.of,t.solved,t.cells,M.state,cur,t.grading,t.last]);if(sig!==playSig){playSig=sig;
-  $("scorebar").innerHTML=`<div><span class="none">${esc(t.names)}</span><br><b>Team ${t.n}</b></div><div><span class="none">Points</span><br><b class="pts">${t.points}</b></div><div><span class="none">Rank</span><br><b>#${t.rank}</b> <span class="none">of ${t.of}</span></div><div><span class="none">Solved</span><br><b>${t.solved}</b> <span class="none">of ${programs.length}</span></div><div style="margin-left:auto"><a href="board.html" target="_blank">Leaderboard</a></div>`;
+  $("scorebar").innerHTML=`<div><span class="none">${esc(t.names)}</span><br><b><span class="em">${t.emojis}</span>Team ${t.n}</b></div><div><span class="none">Points</span><br><b class="pts">${t.points}</b></div><div><span class="none">Rank</span><br><b>#${t.rank}</b> <span class="none">of ${t.of}</span></div><div><span class="none">Solved</span><br><b>${t.solved}</b> <span class="none">of ${programs.length}</span></div><div style="margin-left:auto"><a href="board.html" target="_blank">Leaderboard</a></div>`;
   $("tabs").innerHTML=programs.map(p=>{const c=t.cells[p.id],g=t.grading[p.id];const st=g?`&#8987; ${esc(g.by)} running tests&hellip;`:!c?"not tried":c.solvedAt!==null?`&#10003; solved &middot; ${c.points} pts`:`best ${c.best}/${c.total} &middot; ${c.points} pts`;
     return `<button class="tab${p.id===cur?" cur":""}${c&&c.solvedAt!==null?" done":""}${g?" busy":""}" data-p="${p.id}">${esc(p.title.replace(/ — /," · "))}<span class="st">${st}</span></button>`}).join("");
   for(const b of document.querySelectorAll(".tab"))b.onclick=()=>{cur=b.dataset.p;play()};}
