@@ -56,10 +56,10 @@ pre.term .unread{color:var(--mute);text-decoration:line-through}
 
 <section id="s-lobby" hidden>
   <div class="card lock">Waiting for Mr. Taylor to press Start...</div>
-  <div class="card" id="myteam"></div>
   <div class="card"><div class="lobbyhead"><h2 id="pickhead">Pick a team</h2><span class="none" id="readycount"></span></div>
     <p class="none" style="margin:0 0 4px" id="pickhelp">Each team holds 2 people. Pick the same team as your partner, then press <b>Ready</b>. Ready locks you in.</p>
     <div class="teams pick" id="teams"></div></div>
+  <div class="card" id="readybar"></div>
 </section>
 
 <section id="s-play" hidden>
@@ -103,17 +103,15 @@ let lobbySig="";
 function lobby(){const me=M.me,t=M.team,L=M.lobby;const sig=JSON.stringify([me,t&&t.id,L,M.state]);if(sig===lobbySig)return;lobbySig=sig;
   const started=M.state!=="waiting";
   document.querySelector("#s-lobby .lock").textContent=started?"The challenge has started — pick a team with a free spot to jump in.":"Waiting for Mr. Taylor to press Start...";
-  if(!t){$("myteam").innerHTML=`<h2 style="margin:0">Hi ${esc(me.name)} — you are not on a team yet</h2><p class="none" style="margin:6px 0 0">Choose one of the teams below. ${L.players>1?`${L.players-1} other student${L.players===2?" is":"s are"} in the lobby.`:""}</p>`}
-  else{$("myteam").innerHTML=`<div class="lobbyhead"><h2><span class="em">${t.emoji}</span>Team ${esc(t.name)} — your team${t.members.length===1?" (solo so far)":""}</h2>${me.ready?'<span class="badge ready">READY</span>':""}</div>`+
-    t.members.map(m=>`<div class="who">${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}</div>`).join("")+
-    `<div class="row" style="margin-top:10px">${me.ready?'<button class="ghost" id="unready">Not ready</button>':'<button class="go" id="ready">Ready</button>'}${!me.ready&&!started?'<button class="ghost" id="leave">Leave team</button>':""}</div>`+
-    (me.ready?'<p class="none" style="margin:10px 0 0">You are locked in. Mr. Taylor starts when every team is ready.</p>':"");
-    if($("ready"))$("ready").onclick=()=>act("/api/ready",{ready:true});if($("unready"))$("unready").onclick=()=>act("/api/ready",{ready:false});if($("leave"))$("leave").onclick=()=>act("/api/team",{action:"leave"})}
-  $("pickhead").textContent=t?"Teams":"Pick a team";
+  $("pickhead").textContent=t?"Teams":`Hi ${me.name} — pick a team`;
   $("readycount").textContent=`${L.readyTeams} of ${L.totalTeams} teams ready`;
   $("teams").innerHTML=L.teams.map(x=>{const mine=t&&x.id===t.id;const canJoin=!mine&&!me.ready&&!x.full&&!x.ready&&(!started||!t);
-    return `<div class="team pick${mine?" mine":""}${x.ready?" ready":""}"><div class="big">${x.emoji}</div><div class="tname">${esc(x.name)}</div>${x.members.map(m=>`<div class="who">${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}</div>`).join("")}${x.members.length<L.teamSize?`<div class="slot">${L.teamSize-x.members.length} spot${L.teamSize-x.members.length===1?"":"s"} open</div>`:'<div class="slot">full</div>'}${canJoin?`<button class="join" data-t="${x.id}">${t?"Switch to this team":"Join"}</button>`:mine?'<div class="slot" style="color:var(--orange);font-weight:700;margin-top:8px">your team</div>':""}</div>`}).join("");
-  for(const b of document.querySelectorAll("button.join"))b.onclick=()=>act("/api/team",{action:"join",team:b.dataset.t})}
+    return `<div class="team pick${mine?" mine":""}${x.ready?" ready":""}"><div class="big">${x.emoji}</div><div class="tname">${esc(x.name)}${mine?' <span class="badge" style="color:var(--orange);border-color:var(--orange)">you</span>':""}</div>${x.members.map(m=>`<div class="who">${esc(m.name)}${m.name===me.name?' <small>(you)</small>':""}${m.ready?'<span class="badge ready">ready</span>':""}${m.online?"":'<span class="badge off">away</span>'}</div>`).join("")}${x.members.length<L.teamSize?`<div class="slot">${L.teamSize-x.members.length} spot${L.teamSize-x.members.length===1?"":"s"} open</div>`:'<div class="slot">full</div>'}${canJoin?`<button class="join" data-t="${x.id}">${t?"Switch to this team":"Join"}</button>`:mine&&!me.ready&&!started?'<button class="ghost" id="leave">Leave team</button>':""}</div>`}).join("");
+  for(const b of document.querySelectorAll("button.join"))b.onclick=()=>act("/api/team",{action:"join",team:b.dataset.t});
+  if($("leave"))$("leave").onclick=()=>act("/api/team",{action:"leave"});
+  $("readybar").innerHTML=!t?'<p class="none" style="margin:0">Pick a team above to get started.</p>':
+    `<div class="row" style="justify-content:space-between"><div><b><span class="em">${t.emoji}</span>${esc(t.name)}</b> &middot; ${esc(t.names)}${me.ready?' <span class="badge ready">READY</span>':""}<div class="none" style="font-size:.9rem">${me.ready?"You are locked in. Mr. Taylor starts when every team is ready.":"Press Ready when your team is final. Ready locks you in."}</div></div>${me.ready?'<button class="ghost" id="unready">Not ready</button>':'<button class="go" id="ready">Ready</button>'}</div>`;
+  if($("ready"))$("ready").onclick=()=>act("/api/ready",{ready:true});if($("unready"))$("unready").onclick=()=>act("/api/ready",{ready:false})}
 async function act(p,b){try{const r=await post(p,{id:pid,...b});if(r.s===200){M=r.d;render()}else if(r.s===404){setPid(null);screen("s-name")}else alert(r.d.error||"Could not do that.")}catch(e){}}
 let playSig="";
 function play(){const t=M.team;
