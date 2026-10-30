@@ -21,12 +21,12 @@
     }
     if (!data.rows.length) { el.innerHTML = '<div class="empty">No teams yet.</div>'; return; }
     if (el.dataset.compact) {   // sidebar on the student page: rank, team, five small program marks, points
-      el.innerHTML = '<table class="compact"><tbody>' + data.rows.map((r, i) => `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name"><span class="em">${r.emoji}</span><b>${esc(r.name)}</b><span class="small">${esc(r.names)}</span><div class="marks">${data.programs.map(p => { const c = r.cells[p.id]; return `<span class="mark ${!c ? "none" : c.solvedAt !== null ? "ok" : "part"}" title="P${p.n} ${esc(p.title)}">${!c ? "&middot;" : c.solvedAt !== null ? "&#10003;" : c.best + "/" + c.total}</span>`; }).join("")}</div></td><td class="pts"><b>${r.points}</b></td></tr>`).join("") + "</tbody></table>";
+      el.innerHTML = '<table class="compact"><tbody>' + data.rows.map((r, i) => `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name"><span class="em">${r.emoji}</span><b>${esc(r.name)}</b>${r.finished ? ' <span class="badge ready">&#127937; ' + mmss(r.finishedAt) + "</span>" : ""}<span class="small">${esc(r.names)}</span><div class="marks">${data.programs.map(p => { const c = r.cells[p.id]; return `<span class="mark ${!c ? "none" : c.solvedAt !== null ? "ok" : "part"}" title="P${p.n} ${esc(p.title)}">${!c ? "&middot;" : c.solvedAt !== null ? "&#10003;" : c.best + "/" + c.total}</span>`; }).join("")}</div></td><td class="pts"><b>${r.points}</b></td></tr>`).join("") + "</tbody></table>";
       return;
     }
     let h = '<table><thead><tr><th>#</th><th class="name">Team</th>' + data.programs.map(p => `<th>P${p.n}<span class="small">${esc(p.title)}</span></th>`).join("") + "<th>Points</th></tr></thead><tbody>";
     data.rows.forEach((r, i) => {
-      h += `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name"><span class="em">${r.emoji}</span>${esc(r.name)}<span class="small">${esc(r.names)}</span></td>`;
+      h += `<tr class="r${i + 1}"><td class="rank">${i + 1}</td><td class="name"><span class="em">${r.emoji}</span>${esc(r.name)}${r.finished ? ' <span class="badge ready">&#127937; finished ' + mmss(r.finishedAt) + "</span>" : ""}<span class="small">${esc(r.names)}</span></td>`;
       for (const p of data.programs) {
         const c = r.cells[p.id];
         h += !c ? '<td class="none">&mdash;</td>' : c.solvedAt !== null ? `<td class="ok">&#10003;<span class="small">${mmss(c.solvedAt)} &middot; ${c.points} pts</span></td>` : `<td class="part">${c.best}/${c.total}<span class="small">${c.points} pts</span></td>`;

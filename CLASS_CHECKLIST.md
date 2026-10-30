@@ -30,6 +30,7 @@
 - [ ] Pressed Start too early? **Back to lobby** keeps the teams and clears the timer and scores.
 
 ## During (minute 5–43)
+- [ ] A team that finishes all five sees a 🏁 finish page with the live leaderboard; they can still be passed on points until you press Stop. Finished teams show 🏁 and their time on the projector.
 - [ ] Watch the board. A ✓ with a time and points means fully solved; `7/10` is the best partial score so far. Ranking is by points.
 - Common student messages and what they mean:
   - "The class must be declared as: public class CandyCheck" → wrong class name or missing `public`.

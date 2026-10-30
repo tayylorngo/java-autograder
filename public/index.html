@@ -67,13 +67,17 @@ pre.term .miss{color:var(--mute);font-style:italic}
   <div class="card" id="readybar"></div>
 </section>
 
+<section id="s-done" hidden>
+  <div class="card" id="donehead" style="text-align:center"></div>
+  <div class="card"><h2>Leaderboard <a href="board.html" target="_blank" style="font-size:.85rem;font-weight:500">big view</a></h2><div id="doneboard"></div></div>
+</section>
 <section id="s-play" hidden>
   <div class="card lock" id="lock" hidden></div>
   <div class="play"><div>
     <div class="card scorebar" id="scorebar"></div>
     <div class="tabs" id="tabs"></div>
     <div id="panel"></div>
-  </div><aside class="side"><div class="card"><h2>Leaderboard <a href="board.html" target="_blank">big view</a></h2><div id="board" data-compact="1"></div></div></aside></div>
+  </div><aside class="side"><div class="card"><h2>Leaderboard <a href="board.html" target="_blank">big view</a></h2><div id="sideboard"><div id="board" data-compact="1"></div></div></div></aside></div>
 </section>
 </main>
 <div id="busy" hidden><div class="spin"></div><b id="busytxt">Compiling and running your program...</b><span>Running every test case, this takes a few seconds.</span></div>
@@ -84,11 +88,13 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const mmss=ms=>{const t=Math.max(0,Math.floor(ms/1000));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
 let pid=null;try{pid=localStorage.getItem("pid")}catch(e){}
 let programs=[],M=null,offset=0,cur=null,busy=false,U={};   // U[programId] = {code,fname,result,sig}
-function clearLocal(){U={};lobbySig="";playSig="";for(const k of Object.keys(U))delete U[k];const o=$("panel");if(o)o.innerHTML="";}   // after Reset / leaving the game nothing from the last round lingers
+function clearLocal(){U={};lobbySig="";playSig="";doneSig="";for(const k of Object.keys(U))delete U[k];const o=$("panel");if(o)o.innerHTML="";}   // after Reset / leaving the game nothing from the last round lingers
 
 const post=async(p,b)=>{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return{s:r.status,d:await r.json().catch(()=>({}))}};
 const setPid=v=>{pid=v;try{v?localStorage.setItem("pid",v):localStorage.removeItem("pid")}catch(e){}};
-function screen(n){for(const s of["s-name","s-lobby","s-play"])$(s).hidden=s!==n;document.querySelector("main").classList.toggle("wide",n==="s-play");if(n==="s-name")nameScreen()}
+function screen(n){for(const s of["s-name","s-lobby","s-play","s-done"])$(s).hidden=s!==n;document.querySelector("main").classList.toggle("wide",n==="s-play");if(n==="s-name")nameScreen()}
+// board.js draws into the one element with id "board": keep it in the sidebar normally, move it under the finish header when done.
+function placeBoard(where){const b=$("board"),host=$(where);if(!b||!host||b.parentElement===host)return;if(where==="doneboard")b.removeAttribute("data-compact");else b.dataset.compact="1";host.appendChild(b);if(window.refreshBoard)window.refreshBoard()}
 fetch(API+"/api/programs").then(r=>r.json()).then(p=>{programs=p;if(!cur)cur=p[0].id;render()}).catch(()=>{$("joinerr").textContent="Could not reach the grader. Tell Mr. Taylor."});
 try{$("who").value=localStorage.getItem("who")||""}catch(e){}
 $("join").onclick=join;$("who").onkeydown=e=>{if(e.key==="Enter")join()};$("who").onfocus=()=>$("who").select();
@@ -103,7 +109,13 @@ function tick(){if(!M)return;$("timer").textContent=M.startedAt?mmss(Date.now()+
 const label={waiting:"Waiting to start",open:"LIVE",closed:"Closed"};
 function render(){if(!M||!programs.length){if(!pid)screen("s-name");return}
   $("chip").className="chip "+M.state;$("chip").textContent=label[M.state];tick();
-  if(M.state==="waiting"||!M.team){screen("s-lobby");lobby()}else{screen("s-play");play()}}
+  if(M.state==="waiting"||!M.team){screen("s-lobby");lobby()}else if(M.team.finished){screen("s-done");done()}else{screen("s-play");placeBoard("sideboard");play()}}
+let doneSig="";
+function done(){const t=M.team;placeBoard("doneboard");const sig=JSON.stringify([t.points,t.rank,t.of,t.finishedAt,M.state]);if(sig===doneSig)return;doneSig=sig;
+  const closed=M.state==="closed";
+  $("donehead").innerHTML=`<div style="font-size:3rem;line-height:1">&#127937;</div><h2 style="font-size:1.6rem;margin:6px 0">You finished all ${programs.length} programs!</h2>
+    <div class="scorebar" style="justify-content:center;gap:12px 32px;margin-top:10px"><div><span class="none">Team</span><br><b><span class="em">${t.emoji}</span>${esc(t.name)}</b></div><div><span class="none">Points</span><br><b class="pts">${t.points}</b></div><div><span class="none">${closed?"Final rank":"Rank right now"}</span><br><b>#${t.rank}</b> <span class="none">of ${t.of}</span></div><div><span class="none">Finished at</span><br><b>${mmss(t.finishedAt||0)}</b></div></div>
+    <p class="pump" style="margin:12px 0 0">${closed?"Submissions are closed — this is the final leaderboard.":"Other teams are still working and can pass you on points until Mr. Taylor presses Stop. Watch the board!"}</p>`}
 let lobbySig="";
 function lobby(){const me=M.me,t=M.team,L=M.lobby;const sig=JSON.stringify([me,t&&t.id,L,M.state]);if(sig===lobbySig)return;lobbySig=sig;
   const started=M.state!=="waiting";

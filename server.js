@@ -77,8 +77,9 @@ function record(team, prog, out) {
 const grading = {}, lastResult = {};
 const teamTotals = (t) => {
   const cells = Object.values(t.cells);
-  return { points: cells.reduce((a, c) => a + c.points, 0), solved: cells.filter(c => c.solvedAt !== null).length, tests: cells.reduce((a, c) => a + c.best, 0),
-    last: cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0) };
+  const solved = cells.filter(c => c.solvedAt !== null).length, last = cells.reduce((a, c) => c.solvedAt !== null ? Math.max(a, c.solvedAt) : a, 0);
+  return { points: cells.reduce((a, c) => a + c.points, 0), solved, tests: cells.reduce((a, c) => a + c.best, 0), last,
+    finished: solved === PROGRAMS.length, finishedAt: solved === PROGRAMS.length ? last : null };   // finishedAt: ms after Start when the last program was solved
 };
 const teamRow = (id, t, ids) => { const d = def(id); return { id, n: d.n, name: d.name, emoji: d.emoji, names: teamNames(t), members: teamMembers(t, ids), cells: t.cells, ...teamTotals(t) }; };
 const rankTeams = () => Object.entries(S.teams).filter(([, t]) => t.members.length).map(([id, t]) => teamRow(id, t))
