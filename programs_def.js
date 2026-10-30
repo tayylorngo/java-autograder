@@ -5,9 +5,9 @@ module.exports = [
     header: "public static String rating(int pieces)",
     prompt: `Halloween night is over and it's time to judge the haul. Write a program that asks the trick-or-treater for their name and how many pieces of candy they collected, then prints a one-line verdict.
 
-Your program must read exactly two things, in this order, with these exact prompts (no newline after a prompt):
-  1. Name:                 a single word (use in.next())
-  2. Pieces of candy:      a whole number (use in.nextInt())
+Your program must read exactly two inputs, in this order, with these exact prompts (no newline after a prompt):
+  1. Name:                 a String (one word)
+  2. Pieces of candy:      an int
 
 Write this method exactly as shown and call it from main:
   public static String rating(int pieces)

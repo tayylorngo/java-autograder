@@ -42,6 +42,11 @@ ul{list-style:none;margin:0;padding:0}li{padding:9px 0;border-top:1px solid var(
 .tab.busy .st{color:var(--orange)}
 pre.term .typed{color:var(--orange);font-weight:700;background:rgba(255,138,31,.12);border-radius:4px;padding:0 3px}
 pre.term .unread{color:var(--mute);text-decoration:line-through}
+pre.term .dl{display:inline-block;min-width:100%;background:rgba(255,107,107,.13);box-shadow:-6px 0 0 rgba(255,107,107,.13);border-radius:3px}
+pre.term .de{display:inline-block;min-width:100%;background:rgba(95,214,138,.12);box-shadow:-6px 0 0 rgba(95,214,138,.12);border-radius:3px}
+pre.term mark{background:rgba(255,107,107,.45);color:inherit;border-radius:3px}pre.term .de mark{background:rgba(95,214,138,.4)}
+pre.term .miss{color:var(--mute);font-style:italic}
+.diffnote{font-size:.85rem;color:var(--bad);margin:4px 0 0}
 .runs{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.runs{grid-template-columns:1fr}}
 </style></head>
 <body><main>
@@ -147,13 +152,31 @@ async function submit(p,u){if(busy||!u.code)return;busy=true;$("go").disabled=tr
     else{u.result=show(r.d);u.resultAt=r.d.at;await poll()}
   }catch(e){u.result='<div class="card err">Could not reach the grader. Try again.</div>'}
   busy=false;$("busy").hidden=true;panel(true);const o=$("out");if(o)o.scrollIntoView({behavior:"smooth",block:"nearest"})}
-const term=(parts,raw)=>{if(!parts||!parts.length)return `<pre class="term">${esc(raw||"")||"(nothing)"}</pre>`;let h="";for(const p of parts){h+=esc(p.out);if("in"in p)h+=`<span class="${p.unread?"unread":"typed"}">${esc(p.in)}</span>${p.unread?' <span class="unread" style="text-decoration:none">(never read)</span>':""}\n`}return `<pre class="term">${h||"(nothing)"}</pre>`};
+// Flatten a transcript into text plus the character ranges that were typed input.
+const flat=(parts,raw)=>{if(!parts||!parts.length)return{text:raw||"",typed:[],unread:[]};let text="",typed=[],unread=[];for(const p of parts){text+=p.out;if("in"in p){const a=text.length;text+=p.in;(p.unread?unread:typed).push([a,text.length]);text+="\n"}}return{text,typed,unread}};
+const rtrim=l=>l.replace(/[ \t]+$/,"");
+// Render a transcript. With `other` (the transcript to compare against) every line that differs is flagged and the differing
+// characters are marked. kind: "a" = the student's run (red), "e" = the expected run (green). Trailing spaces and the final
+// newline are ignored, exactly like the grader.
+const term=(parts,raw,other,kind)=>{const me=flat(parts,raw);if(!me.text)return '<pre class="term">(nothing)</pre>';
+  const mine=me.text.replace(/\n$/,"").split("\n"),theirs=other?flat(other.parts,other.raw).text.replace(/\n$/,"").split("\n"):null;
+  const inR=(r,i)=>r.some(([a,b])=>i>=a&&i<b);let h="",pos=0;
+  mine.forEach((line,li)=>{let diff=false,ma=-1,mb=-1;
+    if(theirs){const o=li<theirs.length?theirs[li]:null;
+      if(o===null)diff=true;else if(rtrim(line)!==rtrim(o)){diff=true;const A=rtrim(line),B=rtrim(o);let p=0;while(p<A.length&&p<B.length&&A[p]===B[p])p++;let q=0;while(q<A.length-p&&q<B.length-p&&A[A.length-1-q]===B[B.length-1-q])q++;ma=p;mb=Math.max(p+1,A.length-q)}}
+    let lh="",run="",cls=null;
+    const flush=()=>{if(!run)return;let t=esc(run);if(cls.includes("m"))t=`<mark>${t}</mark>`;if(cls.includes("t"))t=`<span class="typed">${t}</span>`;else if(cls.includes("u"))t=`<span class="unread">${t}</span>`;lh+=t;run=""};
+    for(let i=0;i<line.length;i++){const gi=pos+i;const c=(inR(me.typed,gi)?"t":inR(me.unread,gi)?"u":"")+(diff&&i>=ma&&i<mb?"m":"");if(c!==cls){flush();cls=c}run+=line[i]}
+    flush();if(diff&&!line.length)lh='<span class="miss">(empty line)</span>';
+    h+=diff?`<span class="${kind==="e"?"de":"dl"}">${lh}</span>\n`:lh+"\n";pos+=line.length+1});
+  if(theirs&&theirs.length>mine.length){const n=theirs.length-mine.length;h+=`<span class="${kind==="e"?"de":"dl"}"><span class="miss">(${n} more line${n===1?"":"s"} ${kind==="e"?"in your run":"expected"})</span></span>\n`}
+  return `<pre class="term">${h}</pre>`};
 const checks=c=>(c||[]).map(x=>`<li class="${x.ok?"ok":x.soft?"warn":"bad"}">${x.ok?"&#10003;":x.soft?"&#9888;":"&#10007;"} ${esc(x.msg)}</li>`).join("");
 function show(d){let h=d.by?`<p class="pump" style="margin:0 0 6px">Upload by <b>${esc(d.by)}</b> at ${new Date(d.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</p>`:"";
   if(d.error)return h+`<div class="card err"><b class="bad">${esc(d.error)}</b>${d.detail?`<pre>${esc(d.detail)}</pre>`:""}<ul>${checks(d.checks)}</ul>${d.score?"":'<p class="pump" style="margin:8px 0 0">This upload did not count as an attempt.</p>'}</div>`;
   const pct=Math.round(100*d.passed/d.total),sc=d.score;
   h+=`<div class="card"><div class="score">${d.passed}<small> / ${d.total} tests passed</small>${sc?` <small>&middot; <span class="pts">${sc.points} pts</span> for this program (attempt ${sc.attempts})</small>`:""}</div><div class="bar"><i style="width:${pct}%"></i></div>${d.passed===d.total?'<b class="ok">All tests pass &mdash; nice work! Pick another program.</b>':'<span class="pump">Fix the failing tests and upload again. Each extra compiled attempt costs a few points, so test with the sample runs first.</span>'}<ul style="margin-top:10px">${checks(d.checks)}</ul></div><div class="card"><ul style="margin:-9px 0">`;
   for(const t of d.results){const mark=t.pass?'<span class="ok">&#10003;</span>':'<span class="bad">&#10007;</span>';
-    h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary><div class="runs"><div><div class="lbl">Expected run</div>${term(t.expectedParts,t.expected)}</div><div><div class="lbl">Your run</div>${term(t.actualParts,t.actual)}</div></div></details></li>`}
+    h+=`<li><details ${t.pass?"":"open"}><summary>${mark} ${esc(t.name)}${t.note?` <span class="pump">&mdash; ${esc(t.note)}</span>`:""}</summary><div class="runs"><div><div class="lbl">Expected run</div>${term(t.expectedParts,t.expected,t.pass?null:{parts:t.actualParts,raw:t.actual},"e")}</div><div><div class="lbl">Your run${t.pass?"":' <span class="bad">&mdash; differences highlighted</span>'}</div>${term(t.actualParts,t.actual,t.pass?null:{parts:t.expectedParts,raw:t.expected},"a")}</div></div></details></li>`}
   return h+"</ul></div>"}
 </script></body></html>
